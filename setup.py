@@ -7,7 +7,7 @@ setuptools.setup(
     name="discord-bot-maker-dehadeaaryan",
     version="0.0.1",
     author="Aaryan Dehade",
-    author_email="dehadeaaryan@gmail.com@example.com",
+    author_email="dehadeaaryan@gmail.com",
     description="A Python Package to make Discord bots with ease. 😁",
     long_description=long_description,
     long_description_content_type="text/markdown",
