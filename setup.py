@@ -11,9 +11,9 @@ setuptools.setup(
     description="A Python Package to make Discord bots with ease. 😁",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/pypa/sampleproject",
+    url="https://github.com/dehadeaaryan/discord-bot-maker",
     project_urls={
-        "Bug Tracker": "https://github.com/pypa/sampleproject/issues",
+        "Bug Tracker": "https://github.com/dehadeaaryan/discord-bot-maker/issues",
     },
     classifiers=[
         "Programming Language :: Python :: 3",

@@ -1,15 +1,10 @@
-![discord-bot-maker](https://i.imgur.com/YhSoa1X.png)
-
 ### Introduction
 
-Use this module to create professional discord bots in just a few lines of code. Created by Gfrkad to fulfill the wishes of gamers who want an awesome custom bot for their discord server.
+Use this module to create professional discord bots in just a few lines of code. Created by Aaryan Dehade to fulfill the wishes of gamers who want an awesome custom bot for their discord server.
 
 - Short Code
 - Easy to Learn and Understand
 - Regular updates to functionality
-
-### File maker
-Use [this link](https://github.com/Gfrkad21/Gfrkad21.github.io/blob/main/discord-bot-maker/dbm-startup.exe?raw=true) to download a startup file.
 
 
 ### Code Format
@@ -99,5 +94,5 @@ d()
  - You can create as many commands as you like
  - The `bRun()` command is required to run the bot(You can also call the object like so: `d()` if d is your DBot object)
 
-##### Join our discord server [here](https://discord.gg/E5wXQGjxsd)
-*version = 0.1.9*
+##### Join our discord server [here](https://discord.gg/MsGWMYQZWC)
+*version = 0.0.1*
