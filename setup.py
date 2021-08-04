@@ -8,7 +8,7 @@ setuptools.setup(
     version="0.0.1",
     author="Aaryan Dehade",
     author_email="dehadeaaryan@gmail.com",
-    description="A Python Package to make Discord bots with ease. 😁",
+    description="A Python Package to make Discord bots with ease. (It also has a lot of documentation so you will never be stuck)",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/dehadeaaryan/discord-bot-maker",
