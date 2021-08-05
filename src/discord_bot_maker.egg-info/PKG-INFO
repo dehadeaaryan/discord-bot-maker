@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: discord-bot-maker
-Version: 0.0.3
+Version: 0.0.5
 Summary: A Python Package to make Discord bots with ease. (It also has a lot of documentation so you will never be stuck)
 Home-page: https://github.com/dehadeaaryan/discord-bot-maker
 Author: Aaryan Dehade
@@ -112,6 +112,6 @@ d()
  - The `bRun()` command is required to run the bot(You can also call the object like so: `d()` if d is your DBot object)
 
 ##### Join our discord server [here](https://discord.gg/MsGWMYQZWC)
-*version = 0.0.3*
+*version = 0.0.5*
 
 

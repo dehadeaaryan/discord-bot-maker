@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="discord_bot_maker",
-    version="0.0.3",
+    version="0.0.5",
     author="Aaryan Dehade",
     author_email="dehadeaaryan@gmail.com",
     description="A Python Package to make Discord bots with ease. (It also has a lot of documentation so you will never be stuck)",

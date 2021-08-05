@@ -95,4 +95,4 @@ d()
  - The `bRun()` command is required to run the bot(You can also call the object like so: `d()` if d is your DBot object)
 
 ##### Join our discord server [here](https://discord.gg/MsGWMYQZWC)
-*version = 0.0.3*
+*version = 0.0.5*
