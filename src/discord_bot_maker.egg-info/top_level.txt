@@ -1,1 +1,1 @@
-discord-bot-maker
+discord_bot_maker
