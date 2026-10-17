@@ -28,7 +28,10 @@ The local checks passed 51 Python tests and ten browser checks on both dev and
 production builds. The build-time public origin and fresh adapter output are
 verified, rather than relying on Vite compilation alone.
 
-Still requires the actual environment: Docker builds (CI configured), PostgreSQL
-migrations and backup restoration, trusted proxy/client-address configuration,
+GitHub CI passed Python 3.10/3.12/3.15, distribution checks, production browser
+tests and both Docker image builds for commit 31d453d.
+
+Still requires the actual environment: PostgreSQL migrations and backup
+restoration, trusted proxy/client-address configuration,
 HTTPS cookie behavior and real Discord OAuth. Runner isolation and recovery need
 separate integration tests before enabling hosting. See deployment.md.

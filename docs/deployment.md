@@ -3,7 +3,7 @@
 **Status:** local web development is active and the Python prerelease is published.
 The editor is prepared for an export-first deployment, with optional Discord
 login for saved projects. Containers have not been built locally (Docker is
-unavailable); CI now builds both images. PostgreSQL deployment, live OAuth and
+unavailable); GitHub CI successfully built both images. PostgreSQL deployment, live OAuth and
 runner recovery still need verification in the actual environment.
 
 ## Components

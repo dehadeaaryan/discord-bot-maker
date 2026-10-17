@@ -23,10 +23,9 @@ Web development resumed after the user published the Python prerelease on PyPI.
   create/preview/export/save/reload, both condition branches, mobile list editing,
   palette drag/drop, undo/redo, import and validation. Saved drafts retain their
   project identity and optimistic version after reloading.
-- Coolify Compose and Dockerfiles drafted. Docker is unavailable locally; no
-  containers built or deployed. Operational restore validation remains outstanding.
-  Python, production web, container-build CI and a manual PyPI publishing workflow are included; they have not
-  yet run on GitHub.
+- Coolify Compose and Dockerfiles drafted. Docker is unavailable locally; GitHub CI built both images successfully. No
+  deployment performed. Operational restore validation remains outstanding.
+  Python, production web, container-build CI and a manual PyPI publishing workflow are included; the checks passed on GitHub for commit 31d453d.
 - The user reports publishing 2.0.0a1 on PyPI. No website deployment performed. Export-first web deployment supports optional OAuth;
   development login and hosting are disabled by default in production.
 

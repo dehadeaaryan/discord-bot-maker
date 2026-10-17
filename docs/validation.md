@@ -13,8 +13,10 @@ Validation date: 2026-10-17. No PyPI upload or web deployment performed.
 - Stable wheel/sdist metadata, AGENTS.md/CLAUDE.md inclusion, Twine strict validation
   and configured-secret/token-format archive scans passed.
 - Bun and pip-audit found no known advisories for checked locked dependencies.
-- GitHub CI includes Python 3.10/3.12/3.15, production browser checks and container
-  builds. Local Docker/PostgreSQL, live OAuth and backup restore remain unverified.
+- [GitHub CI](https://github.com/dehadeaaryan/discord-bot-maker/actions/runs/39076729864) passed for commit 31d453d:
+  Python 3.10/3.12/3.15, distribution checks, production browser tests and both
+  Docker image builds. PostgreSQL deployment, live OAuth and backup restore
+  remain unverified.
 
 Historical prerelease validation follows for context.
 
