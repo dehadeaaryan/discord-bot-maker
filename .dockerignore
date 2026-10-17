@@ -1,0 +1,14 @@
+.git
+.venv
+.env
+.env.*
+**/node_modules
+**/.svelte-kit
+**/__pycache__
+**/*.egg-info
+**/.DS_Store
+**/test-results
+**/playwright-report
+dist
+build
+*.db

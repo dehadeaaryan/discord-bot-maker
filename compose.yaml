@@ -1,0 +1,94 @@
+x-backend: &backend
+  build: .
+  environment: &backend-env
+    APP_ENV: production
+    PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:?Set PUBLIC_ORIGIN to your HTTPS domain}
+    DATABASE_URL: postgresql+psycopg://botmaker:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@database:5432/botmaker
+    ENCRYPTION_KEY: ${ENCRYPTION_KEY:?Set ENCRYPTION_KEY}
+    DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:?Set DISCORD_CLIENT_ID}
+    DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET:?Set DISCORD_CLIENT_SECRET}
+    HOSTED_OWNER_ID: ${HOSTED_OWNER_ID:-}
+    MAX_HOSTED_BOTS: ${MAX_HOSTED_BOTS:-3}
+    ALLOW_DEV_LOGIN: "0"
+  init: true
+  read_only: true
+  tmpfs:
+    - /tmp:size=32m
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+
+services:
+  database:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: botmaker
+      POSTGRES_USER: botmaker
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes:
+      - database-data:/var/lib/postgresql
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U botmaker -d botmaker']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    mem_limit: 512m
+  migrate:
+    <<: *backend
+    command: [alembic, upgrade, head]
+    depends_on:
+      database:
+        condition: service_healthy
+    restart: "no"
+  api:
+    <<: *backend
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    expose: ["8000"]
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=4)"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    mem_limit: 384m
+  web:
+    build: ./apps/web
+    environment:
+      ORIGIN: ${PUBLIC_ORIGIN:?Set PUBLIC_ORIGIN}
+      API_INTERNAL_URL: http://api:8000
+      BODY_SIZE_LIMIT: 256K
+    expose: ["3000"]
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD, bun, -e, "fetch('http://127.0.0.1:3000/').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    mem_limit: 256m
+  runner:
+    <<: *backend
+    profiles: [hosting]
+    command: [python, -m, apps.runner.main]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: [CMD, python, -c, "from pathlib import Path; import time; assert time.time()-float(Path('/tmp/discord-bot-maker-runner-heartbeat').read_text())<30"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+    mem_limit: 512m
+    pids_limit: 64
+    stop_grace_period: 20s
+
+volumes:
+  database-data:

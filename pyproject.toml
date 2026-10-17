@@ -1,6 +1,52 @@
 [build-system]
-requires = [
-    "setuptools>=42",
-    "wheel"
-]
+requires = ["setuptools>=84.0.0,<85"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "discord-bot-maker"
+version = "2.0.0a1"
+description = "Build Discord bots with readable Python commands."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Aaryan Dehade", email = "dehadeaaryan@gmail.com" }]
+keywords = ["discord", "bot", "commands", "builder"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.15",
+    "Topic :: Communications :: Chat",
+    "Operating System :: OS Independent",
+]
+dependencies = ["discord.py>=2.7.1,<3", "pydantic>=2.14.1,<3"]
+
+[project.scripts]
+discord-bot-maker = "discord_bot_maker.cli:main"
+
+[project.optional-dependencies]
+server = ["fastapi>=0.143.3,<1", "uvicorn>=0.54.0,<1", "sqlalchemy>=2.0,<3", "psycopg[binary]>=3.3.6,<4", "cryptography>=50.0.2,<51", "httpx>=0.28.1,<1", "alembic>=1.20.0,<2"]
+test = ["pytest>=9.1.1,<10", "pytest-asyncio>=1.4.0,<2", "httpx>=0.28.1,<1"]
+release = ["build>=1.6.1,<2", "twine>=7.0.0,<8", "setuptools>=84.0.0,<85"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "."]
+testpaths = ["tests"]
+
+[project.urls]
+Homepage = "https://github.com/dehadeaaryan/discord-bot-maker"
+Repository = "https://github.com/dehadeaaryan/discord-bot-maker"
+Issues = "https://github.com/dehadeaaryan/discord-bot-maker/issues"
+Documentation = "https://github.com/dehadeaaryan/discord-bot-maker/blob/main/docs/authoring.md"
+Changelog = "https://github.com/dehadeaaryan/discord-bot-maker/blob/main/CHANGELOG.md"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["discord_bot_maker*"]
+namespaces = false
+
+[tool.setuptools.package-data]
+discord_bot_maker = ["py.typed"]

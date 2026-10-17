@@ -1,0 +1,333 @@
+{
+  "$defs": {
+    "Condition": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "const": "condition",
+          "default": "condition",
+          "title": "Kind",
+          "type": "string"
+        },
+        "field": {
+          "default": "role",
+          "enum": [
+            "role",
+            "channel"
+          ],
+          "title": "Field",
+          "type": "string"
+        },
+        "value": {
+          "default": "123456789",
+          "pattern": "^[0-9]{1,25}$",
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "Condition",
+      "type": "object"
+    },
+    "Edge": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "target": {
+          "title": "Target",
+          "type": "string"
+        },
+        "branch": {
+          "default": "next",
+          "enum": [
+            "next",
+            "true",
+            "false"
+          ],
+          "title": "Branch",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "source",
+        "target"
+      ],
+      "title": "Edge",
+      "type": "object"
+    },
+    "Embed": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "const": "embed",
+          "default": "embed",
+          "title": "Kind",
+          "type": "string"
+        },
+        "title": {
+          "default": "Welcome",
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "description": {
+          "default": "",
+          "maxLength": 4096,
+          "title": "Description",
+          "type": "string"
+        },
+        "color": {
+          "default": "#ff7a30",
+          "pattern": "^#[0-9a-fA-F]{6}$",
+          "title": "Color",
+          "type": "string"
+        },
+        "image_url": {
+          "anyOf": [
+            {
+              "format": "uri",
+              "maxLength": 2083,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Image Url"
+        },
+        "ephemeral": {
+          "default": false,
+          "title": "Ephemeral",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "Embed",
+      "type": "object"
+    },
+    "Layout": {
+      "additionalProperties": false,
+      "properties": {
+        "positions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/Position"
+          },
+          "maxProperties": 128,
+          "title": "Positions",
+          "type": "object"
+        }
+      },
+      "title": "Layout",
+      "type": "object"
+    },
+    "Position": {
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "maximum": 100000,
+          "minimum": -100000,
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "maximum": 100000,
+          "minimum": -100000,
+          "title": "Y",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "title": "Position",
+      "type": "object"
+    },
+    "Reply": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "const": "reply",
+          "default": "reply",
+          "title": "Kind",
+          "type": "string"
+        },
+        "content": {
+          "default": "Hello, {{user.display_name}}!",
+          "maxLength": 2000,
+          "minLength": 1,
+          "title": "Content",
+          "type": "string"
+        },
+        "ephemeral": {
+          "default": false,
+          "title": "Ephemeral",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "Reply",
+      "type": "object"
+    },
+    "Trigger": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "const": "trigger",
+          "default": "trigger",
+          "title": "Kind",
+          "type": "string"
+        },
+        "name": {
+          "pattern": "^[a-z][a-z0-9_-]{0,31}$",
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "default": "A bot command",
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "mode": {
+          "default": "slash",
+          "enum": [
+            "slash",
+            "prefix"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "cooldown": {
+          "default": 0,
+          "maximum": 86400,
+          "minimum": 0,
+          "title": "Cooldown",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "title": "Trigger",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "name": {
+      "default": "My first bot",
+      "maxLength": 80,
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+    },
+    "prefix": {
+      "default": "!",
+      "maxLength": 10,
+      "minLength": 1,
+      "title": "Prefix",
+      "type": "string"
+    },
+    "nodes": {
+      "items": {
+        "discriminator": {
+          "mapping": {
+            "condition": "#/$defs/Condition",
+            "embed": "#/$defs/Embed",
+            "reply": "#/$defs/Reply",
+            "trigger": "#/$defs/Trigger"
+          },
+          "propertyName": "kind"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/$defs/Trigger"
+          },
+          {
+            "$ref": "#/$defs/Reply"
+          },
+          {
+            "$ref": "#/$defs/Embed"
+          },
+          {
+            "$ref": "#/$defs/Condition"
+          }
+        ]
+      },
+      "maxItems": 128,
+      "minItems": 2,
+      "title": "Nodes",
+      "type": "array"
+    },
+    "edges": {
+      "items": {
+        "$ref": "#/$defs/Edge"
+      },
+      "maxItems": 256,
+      "minItems": 1,
+      "title": "Edges",
+      "type": "array"
+    },
+    "layout": {
+      "$ref": "#/$defs/Layout"
+    }
+  },
+  "required": [
+    "nodes",
+    "edges"
+  ],
+  "title": "BotDefinition",
+  "type": "object"
+}

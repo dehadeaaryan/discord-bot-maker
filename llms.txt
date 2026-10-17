@@ -1,0 +1,47 @@
+# Discord Bot Maker
+
+Python package for authoring Discord bots with a small public facade. The import
+is discord_bot_maker (not Python's standard-library dbm). Sponge is an example
+consumer; never put Sponge-specific commands or personality in the core package.
+
+## Read first
+- [Authoring API and recipes](docs/authoring.md)
+- [Real example using only public APIs](examples/sponge.py)
+- [Minimal bot and first-server setup](docs/first-bot.md)
+- [Migration](docs/migration.md)
+- [CLI](docs/cli.md)
+- [Release guide](docs/releasing.md)
+- [Public exports](src/discord_bot_maker/__init__.py)
+- [Authoring contract tests](tests/test_authoring.py)
+
+## Canonical pattern
+from discord_bot_maker import Bot, CommandContext, Embed
+bot = Bot.from_env()
+bot.reply("hello", Embed("Hello, {{user.display_name}}!"))
+@bot.command(description="Add two numbers")
+def add(first: int, second: int = 1):
+    return str(first + second)
+bot.run(sync=True)
+
+## Rules for bot authors
+- Put secrets in .env: DISCORD_BOT_TOKEN; optional DISCORD_GUILD_ID and DISCORD_CHANNEL_ID.
+- Never read or print a real token for debugging. Use an offline placeholder in tests.
+- Type-annotate slash parameters; defaults make options optional.
+- An optional first parameter named ctx or context receives CommandContext.
+- Handlers can be normal or async functions. Return str, Embed, Message or Poll.
+- SDK registration, response deferral, sending, error handling and cooldowns are managed.
+- Use ctx.respond() only from async functions; do not manually defer interactions.
+- Use ctx.store for server data and ctx.user_store for server+user data.
+- Use permission="manage_guild" (or a valid Discord permission) on administrative commands.
+- Configure callbacks before run. sync=True replaces commands in the selected server or global scope.
+- bot.poll(), bot.reminders(), bot.welcome(), and bot.every() are reusable opt-in capabilities.
+- Bot.from_env() is slash-only. The old explicit constructor retains prefix compatibility unless slash_only=True.
+- Use bot.client only as an escape hatch when the public API cannot do the task.
+- Python callbacks are not serializable: to_definition() rejects unsupported features.
+- Run only one process per bot/storage file. Stop the old Sponge instance before starting another.
+- Web development is paused. Work on the library and Python examples unless asked otherwise.
+
+## Local checks
+.venv/bin/python -m pytest -q
+.venv/bin/python examples/bot.py --preview hello
+.venv/bin/python examples/sponge.py --help

@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "name": "A helping hand",
+  "prefix": "!",
+  "nodes": [
+    {
+      "id": "command-1",
+      "kind": "trigger",
+      "name": "faq",
+      "description": "Find a quick answer",
+      "mode": "slash",
+      "cooldown": 0
+    },
+    {
+      "id": "reply-1",
+      "kind": "reply",
+      "content": "Need a hand? Ask in #help and someone will be happy to help.",
+      "ephemeral": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-1",
+      "source": "command-1",
+      "target": "reply-1",
+      "branch": "next"
+    }
+  ],
+  "layout": {
+    "positions": {
+      "command-1": {
+        "x": 80.0,
+        "y": 120.0
+      },
+      "reply-1": {
+        "x": 400.0,
+        "y": 120.0
+      }
+    }
+  }
+}

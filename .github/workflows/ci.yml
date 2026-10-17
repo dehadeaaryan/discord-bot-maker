@@ -1,0 +1,45 @@
+name: Python package checks
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.10', '3.12', '3.15']
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -e '.[server,test]'
+      - run: python -m pytest -q
+      - run: python -m pip check
+  distributions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.15'
+      - run: python -m pip install -e '.[release]'
+      - run: python -m build
+      - run: python scripts/check_release.py
+      - run: python scripts/check_secrets.py dist/*
+      - run: python -m twine check --strict dist/*
+      - name: Fresh wheel installation outside the checkout
+        run: |
+          python -m venv /tmp/dbm-installed
+          /tmp/dbm-installed/bin/python -m pip install dist/*.whl
+          cd /tmp
+          /tmp/dbm-installed/bin/discord-bot-maker --version
+          /tmp/dbm-installed/bin/python -c "from discord_bot_maker import Bot, Embed; bot = Bot('offline', slash_only=True); bot.reply('hello', Embed('Hello')); assert bot.to_definition().nodes"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: python-distributions
+          path: dist/*

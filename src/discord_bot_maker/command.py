@@ -1,44 +1,21 @@
+"""Command definitions shared by the Python API and future visual editor."""
+
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
 class Command:
-    def __init__(self, ):
-        self.dict = {}
-        self.trigger = False
-        self.Reply = False
-        self.Reply2 = False
-        self.Emoji = False
-        self.Image = False
-        self.Help = False
-    
-    def __add__(self, ):
-        pass
+    """A prefix command that replies with an embed."""
 
-    def __call__(self):
-        return tuple(self.dict.values)
+    name: str
+    reply: str
+    description: str | None = None
+    emoji: str | None = "😃"
+    image_url: str | None = None
+    help_text: str = "No description provided."
 
-
-
-    def addTrigger(self, trigger):
-        self.dict["trigger"] = trigger
-        self.trigger = True
-    
-    def addReply(self, reply):
-        self.dict["reply"] = reply
-        self.Reply = True
-    
-    def addReply2(self, reply):
-        self.dict["reply"] = reply
-        self.Reply2 = True
-    
-    def addEmoji(self, reply):
-        self.dict["reply"] = reply
-        self.Emoji = True
-    
-    def addImage(self, reply):
-        self.dict["reply"] = reply
-        self.Image = True
-    
-    def addHelp(self, reply):
-        self.dict["reply"] = reply
-        self.Help = True
-
-
-# incomplete
+    def __post_init__(self):
+        if not self.name or any(character.isspace() for character in self.name):
+            raise ValueError("Command names must be nonempty and contain no whitespace.")
+        if not self.reply:
+            raise ValueError("A command reply cannot be empty.")

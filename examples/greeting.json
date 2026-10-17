@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "name": "Hello, world",
+  "prefix": "!",
+  "nodes": [
+    {
+      "id": "command-1",
+      "kind": "trigger",
+      "name": "hello",
+      "description": "Say hello",
+      "mode": "slash",
+      "cooldown": 0
+    },
+    {
+      "id": "reply-1",
+      "kind": "reply",
+      "content": "Hello, {{user.display_name}}! 👋",
+      "ephemeral": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-1",
+      "source": "command-1",
+      "target": "reply-1",
+      "branch": "next"
+    }
+  ],
+  "layout": {
+    "positions": {
+      "command-1": {
+        "x": 80.0,
+        "y": 120.0
+      },
+      "reply-1": {
+        "x": 400.0,
+        "y": 120.0
+      }
+    }
+  }
+}
