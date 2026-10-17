@@ -1,6 +1,7 @@
 """Exercise an installed wheel from outside its source checkout (no Discord I/O)."""
 
 import asyncio
+from importlib.resources import files
 from importlib.metadata import distribution
 import json
 import tempfile
@@ -28,8 +29,10 @@ async def main():
         result = Engine(static.to_definition()).execute("hello", Context(display_name="Sam"))
         assert result["messages"][0]["content"] == "Hello, Sam!"
         await static.client.close()
-    files = distribution("discord-bot-maker").files or []
-    assert any(str(file) == "discord_bot_maker/py.typed" for file in files)
+    installed_files = distribution("discord-bot-maker").files or []
+    assert any(str(file) == "discord_bot_maker/py.typed" for file in installed_files)
+    for name in ("AGENTS.md", "CLAUDE.md"):
+        assert files("discord_bot_maker").joinpath(name).read_text(encoding="utf-8").strip()
     print(json.dumps({"version": __version__, "installed_smoke": "passed"}))
 
 

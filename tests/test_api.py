@@ -16,7 +16,7 @@ from discord_bot_maker.templates import template
 @pytest.fixture
 def api(tmp_path):
     key = Fernet.generate_key().decode()
-    app = create_app(Settings(database_url=f"sqlite:///{tmp_path / 'api.db'}", encryption_key=key, allow_dev_login=True, hosted_owner_id="development"))
+    app = create_app(Settings(database_url=f"sqlite:///{tmp_path / 'api.db'}", encryption_key=key, allow_dev_login=True, hosted_owner_id="development", hosting_enabled=True))
     Base.metadata.create_all(app.state.sessions.kw["bind"])
     with TestClient(app, base_url="http://localhost:5173", headers={"Origin": "http://localhost:5173"}) as client:
         yield client, app, key
@@ -114,3 +114,94 @@ def test_oauth_state_and_production_config(api):
     assert client.get("/api/auth/callback?code=bad&state=bad").status_code == 400
     with pytest.raises(ValueError, match="Production"):
         Settings(production=True, origin="http://localhost", encryption_key="", client_id="", client_secret="")
+
+
+def test_streamed_body_limit_and_preview_types(api):
+    client, _, _ = api
+    # A generator has no Content-Length: the streaming cap must still apply.
+    def oversized():
+        yield b'{"name":"'
+        for _ in range(5):
+            yield b'x' * 65536
+        yield b'"}'
+    response = client.post('/api/validate', content=oversized(), headers={'Content-Type': 'application/json'})
+    assert response.status_code == 413
+    response = client.post('/api/preview', json={
+        'definition': template().model_dump(mode='json'), 'command': 'hello',
+        'context': {'role_ids': {'invalid': 'value'}},
+    })
+    assert response.status_code == 422
+    assert 'invalid' not in response.text
+
+
+def test_hosting_is_explicitly_disabled(api):
+    client, app, _ = api
+    app.state.settings.hosting_enabled = False
+    login(client)
+    assert client.get('/api/auth/me').json()['can_host'] is False
+    project = create(client)
+    path = f"/api/projects/{project['id']}"
+    assert client.put(path + '/credentials', json={'token': 'offline-placeholder-token', 'application_id': '123'}).status_code == 403
+    assert client.post(path + '/publish', json={'version': 1}).status_code == 403
+    assert client.post(path + '/rollback', json={'revision_id': 'missing'}).status_code == 403
+
+
+def test_production_can_run_without_oauth_but_never_with_dev_login():
+    config = dict(production=True, origin='https://bot.example.com',
+                  encryption_key=Fernet.generate_key().decode(),
+                  database_url='postgresql+psycopg://user:placeholder@database/botmaker',
+                  client_id='', client_secret='', allow_dev_login=False)
+    settings = Settings(**config)
+    assert not settings.hosting_enabled
+    with pytest.raises(ValueError, match='Development login'):
+        Settings(**{**config, 'allow_dev_login': True})
+    with pytest.raises(ValueError, match='both Discord'):
+        Settings(**{**config, 'client_id': '123'})
+    with pytest.raises(ValueError, match='Production hosting'):
+        Settings(**{**config, 'hosting_enabled': True})
+    with pytest.raises(ValueError, match='PUBLIC_ORIGIN'):
+        Settings(**{**config, 'origin': 'https://bot.example.com/unexpected-path'})
+
+
+def test_oauth_exchange_creates_hashed_session_and_logout_revokes_it(api, monkeypatch):
+    import httpx
+    from urllib.parse import parse_qs, urlsplit
+
+    client, app, _ = api
+    app.state.settings.client_id = '123456789'
+    app.state.settings.client_secret = 'offline-oauth-secret'
+    original_async_client = httpx.AsyncClient
+    calls = []
+
+    def discord(request):
+        calls.append(str(request.url))
+        if request.url.path.endswith('/oauth2/token'):
+            assert b'grant_type=authorization_code' in request.content
+            return httpx.Response(200, json={'access_token': 'offline-access-token'})
+        assert request.headers['authorization'] == 'Bearer offline-access-token'
+        return httpx.Response(200, json={'id': '123456789', 'username': 'Test account'})
+
+    monkeypatch.setattr(httpx, 'AsyncClient', lambda **kwargs: original_async_client(transport=httpx.MockTransport(discord), **kwargs))
+    start = client.get('/api/auth/login', follow_redirects=False)
+    params = parse_qs(urlsplit(start.headers['location']).query)
+    assert params['scope'] == ['identify']
+    assert params['redirect_uri'] == ['http://localhost:5173/api/auth/callback']
+    state = params['state'][0]
+    assert state not in client.cookies.get('dbm_oauth')
+    assert 'HttpOnly' in start.headers['set-cookie']
+    assert client.get('/api/auth/callback', params={'code': 'offline-code', 'state': 'wrong'}).status_code == 400
+    assert not calls
+    callback = client.get('/api/auth/callback', params={'code': 'offline-code', 'state': state}, follow_redirects=False)
+    assert callback.status_code == 303
+    assert 'offline-access-token' not in callback.text
+    user = client.get('/api/auth/me').json()
+    assert user['id'] == '123456789'
+    assert user['name'] == 'Test account'
+    with app.state.sessions() as session:
+        stored = session.get(LoginSession, hashlib.sha256(client.cookies.get('dbm_session').encode()).hexdigest())
+        assert stored is not None
+        assert stored.id != client.cookies.get('dbm_session')
+    assert client.get('/api/auth/callback', params={'code': 'offline-code', 'state': state}).status_code == 400
+    client.headers['x-csrf-token'] = user['csrf']
+    assert client.post('/api/auth/logout').status_code == 204
+    assert client.get('/api/auth/me').status_code == 401

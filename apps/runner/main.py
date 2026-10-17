@@ -38,8 +38,8 @@ def terminate(process):
 
 def main():
     settings = Settings()
-    if not settings.hosted_owner_id:
-        raise SystemExit("Configure HOSTED_OWNER_ID before starting the pilot runner.")
+    if not settings.hosting_enabled or not settings.hosted_owner_id:
+        raise SystemExit("Configure ENABLE_HOSTING=1 and HOSTED_OWNER_ID before starting the pilot runner.")
     if not __import__("os").getenv("ENCRYPTION_KEY"):
         raise SystemExit("Configure the same ENCRYPTION_KEY as the API.")
     _, sessions = connect(settings.database_url)

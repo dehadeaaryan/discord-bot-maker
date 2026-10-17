@@ -18,6 +18,7 @@ from fastapi.responses import RedirectResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.orm import Session
+from .body_limit import BoundedBodyMiddleware
 
 from discord_bot_maker import BotDefinition, Context, Engine, ExecutionError
 from discord_bot_maker.definition import VARIABLES
@@ -31,11 +32,23 @@ class Input(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class PreviewContext(Input):
+    user_id: str = Field(default="100000001", max_length=25, pattern=r"^[0-9]+$")
+    user_name: str = Field(default="Aaryan", max_length=100)
+    display_name: str = Field(default="Aaryan", max_length=100)
+    channel_id: str = Field(default="100000002", max_length=25, pattern=r"^[0-9]+$")
+    channel_name: str = Field(default="general", max_length=100)
+    server_id: str = Field(default="100000003", max_length=25, pattern=r"^[0-9]+$")
+    server_name: str = Field(default="My server", max_length=100)
+    message_content: str = Field(default="", max_length=4000)
+    role_ids: list[Annotated[str, Field(pattern=r"^[0-9]{1,25}$")]] = Field(default_factory=list, max_length=100)
+
+
 class Preview(Input):
     definition: BotDefinition
     command: str = Field(max_length=32)
     mode: str = Field(default="slash", pattern="^(slash|prefix)$")
-    context: dict = Field(default_factory=dict)
+    context: PreviewContext = Field(default_factory=PreviewContext)
 
 
 class Save(Input):
@@ -54,7 +67,7 @@ class Publish(Input):
 
 
 class Rollback(Input):
-    revision_id: str
+    revision_id: str = Field(max_length=36)
 
 
 def digest(value):
@@ -71,7 +84,11 @@ def create_app(settings: Settings | None = None):
         yield
         engine.dispose()
 
-    app = FastAPI(title="Discord Bot Maker API", version="2.0.0a1", lifespan=lifespan)
+    app = FastAPI(title="Discord Bot Maker API", version="2.0.0", lifespan=lifespan,
+                  docs_url=None if settings.production else "/docs",
+                  redoc_url=None if settings.production else "/redoc",
+                  openapi_url=None if settings.production else "/openapi.json")
+    app.add_middleware(BoundedBodyMiddleware, max_body_size=262144)
     app.state.sessions, app.state.settings = sessions, settings
 
     @app.exception_handler(RequestValidationError)
@@ -86,9 +103,6 @@ def create_app(settings: Settings | None = None):
         if request.method not in ("GET", "HEAD", "OPTIONS"):
             if request.headers.get("origin") != settings.origin:
                 return Response("Origin rejected", status_code=403)
-            body = await request.body()
-            if len(body) > 262144:
-                return Response("Request exceeds 256 KiB", status_code=413)
         response = await call_next(request)
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Cache-Control"] = "no-store"
@@ -118,7 +132,7 @@ def create_app(settings: Settings | None = None):
         return project
 
     def host_allowed(user):
-        if not settings.hosted_owner_id or user.owner_id != settings.hosted_owner_id:
+        if not settings.hosting_enabled or not settings.hosted_owner_id or user.owner_id != settings.hosted_owner_id:
             raise HTTPException(403, "Hosted bots are limited to the configured owner during the pilot. Export your bot to run it yourself.")
 
     def serialize(project):
@@ -161,9 +175,7 @@ def create_app(settings: Settings | None = None):
     @app.post("/api/preview")
     def preview(body: Preview):
         try:
-            context = Context(**body.context)
-            if len(json.dumps(body.context)) > 10000:
-                raise ValueError("Preview context is too large.")
+            context = Context(**body.context.model_dump())
             return Engine(body.definition).execute(body.command, context, body.mode)
         except (ValueError, TypeError) as error:
             raise HTTPException(422, str(error)) from None
@@ -215,7 +227,7 @@ def create_app(settings: Settings | None = None):
 
     @app.get("/api/auth/me")
     def me(user: User):
-        return {"id": user.owner_id, "name": user.username, "csrf": user.csrf, "can_host": bool(settings.hosted_owner_id and user.owner_id == settings.hosted_owner_id)}
+        return {"id": user.owner_id, "name": user.username, "csrf": user.csrf, "can_host": bool(settings.hosting_enabled and settings.hosted_owner_id and user.owner_id == settings.hosted_owner_id)}
 
     @app.post("/api/auth/logout")
     def logout(user: User, session: DB):

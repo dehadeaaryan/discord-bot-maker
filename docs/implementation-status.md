@@ -1,7 +1,6 @@
 # Implementation status
 
-Web development is paused at the user's request while the standalone example
-bot is tried in Discord.
+Web development resumed after the user published the Python prerelease on PyPI.
 
 - Python 3.15.0 installed as the user's shell default; project .venv recreated on 3.15.0.
 - Versioned graph models, bounded engine, templates, CLI, exports, migration helper,
@@ -20,15 +19,17 @@ bot is tried in Discord.
   lease code implemented with offline tests. Production PostgreSQL and process
   recovery integration checks remain.
 - Web editor, local drafts, previews, import/export, account/project and hosted
-  controls implemented. Type checking and production compilation passed. Initial
-  browser tests failed and were interrupted when web work was deferred; inspect
-  these before resuming. The UI is not yet browser-verified.
+  controls implemented. Type checking and fresh production server build passed. Ten browser checks cover
+  create/preview/export/save/reload, both condition branches, mobile list editing,
+  palette drag/drop, undo/redo, import and validation. Saved drafts retain their
+  project identity and optimistic version after reloading.
 - Coolify Compose and Dockerfiles drafted. Docker is unavailable locally; no
   containers built or deployed. Operational restore validation remains outstanding.
-  Python CI and a manual PyPI publishing workflow are now included; they have not
+  Python, production web, container-build CI and a manual PyPI publishing workflow are included; they have not
   yet run on GitHub.
-- PyPI package is an unpublished 2.0.0a1 prerelease. Nothing was deployed or published.
+- The user reports publishing 2.0.0a1 on PyPI. No website deployment performed. Export-first web deployment supports optional OAuth;
+  development login and hosting are disabled by default in production.
 
-Release preparation: version 2.0.0a1; see docs/releasing.md and CHANGELOG.md.
+Release preparation: stable version 2.0.0; see docs/releasing.md and CHANGELOG.md.
 Only the Python package is a PyPI release target. Web/backend code is committed
-as explicitly unfinished repository work and excluded from PyPI distributions.
+as separate repository work and excluded from PyPI distributions.

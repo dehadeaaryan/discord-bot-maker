@@ -1,4 +1,4 @@
-name: Publish Python prerelease
+name: Publish Python package
 on:
   workflow_dispatch:
 permissions:

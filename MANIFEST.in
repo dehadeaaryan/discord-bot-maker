@@ -1,9 +1,9 @@
-include LICENSE README.md CHANGELOG.md CONTRIBUTING.md llms.txt
+include LICENSE README.md CHANGELOG.md CONTRIBUTING.md llms.txt AGENTS.md CLAUDE.md
 include requirements.txt
 include requirements-release.lock
 include scripts/check_release.py scripts/smoke_installed.py
 include scripts/check_secrets.py
-recursive-include src/discord_bot_maker *.py py.typed
+recursive-include src/discord_bot_maker *.py py.typed AGENTS.md CLAUDE.md
 recursive-include docs *.md
 recursive-include examples *.py *.json
 include tests/test_authoring.py tests/test_compatibility.py tests/test_engine.py tests/test_example.py

@@ -1,16 +1,17 @@
 {
   "name": "discord-bot-maker-web",
   "private": true,
-  "version": "2.0.0-alpha.1",
+  "version": "2.0.0",
   "type": "module",
   "packageManager": "bun@1.3.11",
   "scripts": {
     "dev": "bun --bun vite dev --host 0.0.0.0",
-    "build": "bun --bun vite build",
+    "build": "bun --bun scripts/build.ts",
     "prepare": "bun --bun svelte-kit sync",
     "check": "bun --bun svelte-kit sync && bun --bun svelte-check --tsconfig ./tsconfig.json",
     "test:ui": "bun --bun playwright test",
-    "types": "bun --bun json2ts ../../schema/bot-definition.json -o src/lib/definition.generated.ts"
+    "types": "bun --bun json2ts ../../schema/bot-definition.json -o src/lib/definition.generated.ts",
+    "preview:image": "bun --bun scripts/generate-social-preview.ts"
   },
   "dependencies": {
     "@lucide/svelte": "^1.59.0",

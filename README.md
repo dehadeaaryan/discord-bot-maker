@@ -23,9 +23,36 @@ a real bot, including a pet duck, saved snack counts, server settings, polls and
 restart-safe reminders. Sponge's personality lives in its script; the library is
 reusable for any bot.
 
-The prepared release is **2.0.0a1**, the first v2 prerelease. The project uses Python **3.15.0**;
+The prepared stable release is **2.0.0**. The project uses Python **3.15.0**;
 the package declares Python 3.10+. Sponge has connected and synchronized its expanded command set live;
 automated tests cover the authoring features offline. More live feature testing is welcome.
+
+## Create your Discord bot
+
+1. Open the [Discord Developer Portal](https://discord.com/developers/applications),
+   choose **New Application**, and give your bot a name.
+2. Open **Bot**. Add a bot user if prompted, then choose **Reset Token** and copy
+   the **bot token**. This is different from the application ID, public key, and
+   OAuth client secret. Keep it private; reset it if it is exposed.
+3. Open **Installation**, enable **Guild Install**, and select the `bot` and
+   `applications.commands` scopes under **Default Install Settings**.
+4. Give it **View Channels**, **Send Messages**, and **Embed Links**, then save.
+   Open the **Discord Provided Link**, select **Add to Server**, and authorize it
+   in a server you can manage. Administrator permission is unnecessary.
+5. For faster testing, enable **User Settings → Advanced → Developer Mode** in
+   Discord, then right-click your server and choose **Copy Server ID**.
+
+Slash commands do not need privileged intents. Enable **Message Content Intent**
+on the Bot page only if you use prefix commands. Enable **Server Members Intent**
+if you use `bot.welcome()`. These bots connect through the Gateway; leave
+**Interactions Endpoint URL** empty. No public key or OAuth client secret is
+needed to run the Python bot.
+
+Keep the token in a local `.env` file next to your script and add `.env` to
+`.gitignore`. `Bot.from_env()` reads it automatically. The runnable examples below
+show the variable names. For installation details, see
+[Discord's installation guide](https://discord.com/developers/quick-start/getting-started)
+and our [first-bot guide](https://github.com/dehadeaaryan/discord-bot-maker/blob/main/docs/first-bot.md).
 
 ## Run Sponge
 
@@ -79,12 +106,24 @@ The core library does not require FastAPI, PostgreSQL or the web frontend. Those
 are separate optional dependencies. `requirements.lock` pins the tested full
 contributor/backend environment; the published package uses compatible ranges.
 
+## Coding agents
+
+`AGENTS.md` and `CLAUDE.md` ship inside the Python package with public API patterns,
+examples, setup, and offline testing guidance. Agents do not automatically read
+instructions from installed dependencies. Point your agent at the installed guide:
+
+```sh
+python -c "from importlib.resources import files; print(files('discord_bot_maker').joinpath('AGENTS.md').read_text())"
+```
+
+In this repository, the root AGENTS.md and CLAUDE.md point to the same guide.
+
 ## Learn the API
 
 - [Authoring guide](https://github.com/dehadeaaryan/discord-bot-maker/blob/main/docs/authoring.md): command functions, response types, permissions, storage, polls, reminders and schedules.
 - [Sponge's source](https://github.com/dehadeaaryan/discord-bot-maker/blob/main/examples/sponge.py): a complete consumer of the public package API.
 - [AI coding reference](https://github.com/dehadeaaryan/discord-bot-maker/blob/main/llms.txt): canonical patterns, API links and boundaries.
-- [v2 implementation plan](https://github.com/dehadeaaryan/discord-bot-maker/blob/main/docs/v2-plan.md) and [implementation status](https://github.com/dehadeaaryan/discord-bot-maker/blob/main/docs/implementation-status.md): the web editor and hosted services remain paused.
+- [v2 implementation plan](https://github.com/dehadeaaryan/discord-bot-maker/blob/main/docs/v2-plan.md) and [implementation status](https://github.com/dehadeaaryan/discord-bot-maker/blob/main/docs/implementation-status.md): the visual editor is in active development; hosted deployment checks remain.
 
 ## Portable definitions
 
@@ -111,10 +150,10 @@ MIT licensed. Created by Aaryan Dehade.
 
 ## PyPI release
 
-After 2.0.0a1 has been published, install the prerelease with:
+After publishing 2.0.0, install the [stable release on PyPI](https://pypi.org/project/discord-bot-maker/) with:
 
 ```sh
-python -m pip install --upgrade 'discord-bot-maker==2.0.0a1'
+python -m pip install --upgrade 'discord-bot-maker==2.0.0'
 ```
 
 See the [release guide](https://github.com/dehadeaaryan/discord-bot-maker/blob/main/docs/releasing.md),

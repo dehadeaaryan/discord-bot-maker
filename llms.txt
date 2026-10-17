@@ -5,6 +5,8 @@ is discord_bot_maker (not Python's standard-library dbm). Sponge is an example
 consumer; never put Sponge-specific commands or personality in the core package.
 
 ## Read first
+- [Packaged agent guide](src/discord_bot_maker/AGENTS.md)
+- [Claude entry point](src/discord_bot_maker/CLAUDE.md)
 - [Authoring API and recipes](docs/authoring.md)
 - [Real example using only public APIs](examples/sponge.py)
 - [Minimal bot and first-server setup](docs/first-bot.md)
@@ -39,7 +41,7 @@ bot.run(sync=True)
 - Use bot.client only as an escape hatch when the public API cannot do the task.
 - Python callbacks are not serializable: to_definition() rejects unsupported features.
 - Run only one process per bot/storage file. Stop the old Sponge instance before starting another.
-- Web development is paused. Work on the library and Python examples unless asked otherwise.
+- Web development is active in apps/web and apps/api. Keep standalone library and Sponge independent of web services.
 
 ## Local checks
 .venv/bin/python -m pytest -q

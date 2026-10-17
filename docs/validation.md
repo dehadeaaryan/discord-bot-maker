@@ -1,4 +1,24 @@
-# 2.0.0a1 validation record
+# 2.0.0 stable release and web validation
+
+Validation date: 2026-10-17. No PyPI upload or web deployment performed.
+
+- Python 3.15.0: 51 repository tests passed, including streaming limits, production
+  configuration, ownership, CSRF, credential encryption and disabled hosting.
+- Web: type checking and a fresh production build passed. Ten browser checks
+  passed against both development and the actual generated production server.
+  They cover editing, conditions, saving/reloading, exports/imports, mobile,
+  minimap bounds, link metadata, HTML escaping, security headers and throttling.
+- The build now waits for Bun's SvelteKit analysis workers and verifies regenerated
+  adapter output. PUBLIC_ORIGIN is supplied at web build time for SvelteKit 3.
+- Stable wheel/sdist metadata, AGENTS.md/CLAUDE.md inclusion, Twine strict validation
+  and configured-secret/token-format archive scans passed.
+- Bun and pip-audit found no known advisories for checked locked dependencies.
+- GitHub CI includes Python 3.10/3.12/3.15, production browser checks and container
+  builds. Local Docker/PostgreSQL, live OAuth and backup restore remain unverified.
+
+Historical prerelease validation follows for context.
+
+## 2.0.0a1 validation record
 
 Release preparation date: 2026-10-17. No upload is performed by these checks.
 
@@ -30,8 +50,12 @@ restart behavior. Automated interaction/storage tests cover these features offli
 
 ## Separate repository work
 
-The web app previously passed type checking and production compilation. Initial
-browser tests failed, then web work was paused. Production PostgreSQL behavior,
+Web development resumed after the prerelease upload. Seven browser tests passed, including minimap bounds in both themes.
+Type checking and production
+compilation pass. Browser tests exercise build/preview/export/save/reload, both
+condition branches, mobile list editing without horizontal overflow, palette
+drag/drop, undo/redo, local restoration, imports and invalid-flow feedback.
+Desktop and mobile screenshots were inspected. Production PostgreSQL behavior,
 runner recovery, container execution/deployment and backup restoration remain
 unverified. These services are excluded from PyPI artifacts and are not part of
 the prerelease's production-readiness claim.

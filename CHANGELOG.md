@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.0.0 — 2026-10-17
+
+- Minimal visual editor with palette drag/drop, multiple commands, branch previews,
+  import/export, local drafts and optional Discord OAuth project saving.
+- Shared AD branding, setup instructions and a landing-page link preview.
+- Production CSP/security headers, streamed body limits, request throttling,
+  stricter preview input validation and explicit opt-in for hosted execution.
+- Separate server dependency lock, hardened container defaults and web/container CI.
+- AGENTS.md and CLAUDE.md included as Python package resources and repository guides.
+- Exported bot README includes Discord application, token and installation steps.
+
 ## 2.0.0a1 — 2026-10-17
 
 First v2 prerelease, following PyPI 1.0.0. The Python package is the release target;

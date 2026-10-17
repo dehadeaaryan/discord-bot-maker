@@ -55,6 +55,7 @@ Package runtime dependencies are declared in pyproject.toml. The optional test,
 server and release extras serve different workflows; a normal install does not
 pull in FastAPI or PostgreSQL dependencies. requirements.txt pins direct runtime
 versions. requirements.lock resolves the full contributor/backend environment.
+requirements-server.lock pins only production backend dependencies.
 SQLAlchemy resolves to the newest compatible major: 2.0 on Python 3.10 and 2.1
 on the current development interpreter. SQLAlchemy 2.1 requires Python 3.11+.
 requirements-release.lock separately pins publishing tools and core dependencies.
@@ -67,11 +68,12 @@ Use the lowest supported interpreter for universal resolution. Re-run the suppor
 Python checks after changing dependencies. Build-system setuptools is separate
 from installed runtime dependencies.
 
-## Working on the web app later
+## Working on the web app
 
-Web development is paused. The editor compiles and type-checks, but the initial
-browser suite failed and its integration work remains unfinished. Do not describe
-it or the hosted service as production-ready. Bun is the frontend package manager
+The visual editor is in active development. Browser checks cover editing, both
+condition branches, preview, ZIP export, authenticated saving, project restoration,
+drag-and-drop, undo/redo, import, validation and mobile layout. Hosted operation
+still requires production integration checks. Bun is the frontend package manager
 and runtime; its version is recorded in packageManager and Dockerfiles.
 
 In separate terminals from the repository root:
@@ -94,13 +96,14 @@ explicitly opt-in and prohibited when APP_ENV=production.
 ```sh
 cd apps/web
 bun run check
-bun run build
+PUBLIC_ORIGIN=http://localhost:4173 bun run build
 bun run test:ui
+DBM_TEST_PRODUCTION=1 bun run test:ui
 ```
 
 The browser-test config starts its own API and development web server and uses a
-temporary SQLite file. Those tests are not part of the PyPI release gate while
-web integration is deferred. See implementation-status.md for outstanding work.
+temporary SQLite file. Tests use isolated ports 4173 and 18000, with development login enabled only
+for that test API. See implementation-status.md for outstanding work.
 
 ## Contracts and migrations
 
@@ -131,3 +134,19 @@ Commit source, docs, lockfiles, schema and intentional artwork. Do not commit
 .env, bot databases, .DS_Store, node_modules, virtual environments, .egg-info,
 build/, dist/ or browser-test artifacts. Generated distributions are uploaded to
 PyPI/release artifacts, not versioned in Git.
+
+## Link preview
+
+Open Graph and Twitter card metadata are rendered by the root layout, so message
+crawlers do not need JavaScript. The image is a public 1200 × 630 PNG at
+`/social-preview.png`. Its absolute URL uses the request origin; production's
+PUBLIC_ORIGIN build argument supplies the public Coolify domain.
+
+To refresh the image after changing the landing page, start the web dev server,
+then run `bun run preview:image` from `apps/web`. The script captures the actual
+landing page in dark mode with the shared AD logo and local Figtree font.
+Set `PREVIEW_BASE_URL` if using a port other than 5173. Commit the updated PNG.
+
+The build wrapper keeps Bun alive until SvelteKit finishes route-analysis workers
+and adapter output, and fails if the standalone server was not regenerated.
+Production browser tests run that generated server, rather than the Vite dev server.

@@ -8,7 +8,7 @@
 </script>
 <div class:selected class="flow-block" class:condition={kind === 'condition'}>
   {#if kind !== 'trigger'}<Handle type="target" position={Position.Left}/>{/if}
-  <div class="block-caption"><Icon size={15}/><span>{kind === 'trigger' ? 'COMMAND TRIGGER' : kind.toUpperCase()}</span><span class="block-number">{String(data.step || '')}</span></div>
+  <div class="block-caption"><Icon size={15}/><span>{kind === 'trigger' ? 'Command' : kind.charAt(0).toUpperCase() + kind.slice(1)}</span></div>
   <strong>{String(data.label || kind)}</strong>
   <p>{String(data.summary || '')}</p>
   {#if kind === 'condition'}

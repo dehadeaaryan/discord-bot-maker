@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "discord-bot-maker"
-version = "2.0.0a1"
+version = "2.0.0"
 description = "Build Discord bots with readable Python commands."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -13,7 +13,7 @@ license-files = ["LICENSE"]
 authors = [{ name = "Aaryan Dehade", email = "dehadeaaryan@gmail.com" }]
 keywords = ["discord", "bot", "commands", "builder"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 5 - Production/Stable",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.10",
@@ -49,4 +49,4 @@ include = ["discord_bot_maker*"]
 namespaces = false
 
 [tool.setuptools.package-data]
-discord_bot_maker = ["py.typed"]
+discord_bot_maker = ["py.typed", "AGENTS.md", "CLAUDE.md"]

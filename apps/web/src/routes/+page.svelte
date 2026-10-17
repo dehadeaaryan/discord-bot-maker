@@ -1,12 +1,34 @@
 <script lang="ts">
-  import { ArrowRight, Code, MousePointer2, Download, Sparkles, GitBranch, MessageSquare, Hash } from '@lucide/svelte';
+  import { ArrowRight, Code, Sparkles, MessageSquare, Hash } from '@lucide/svelte';
 </script>
-<svelte:head><title>Discord Bot Maker — Small ideas. Great bots.</title><meta name="description" content="Build a Discord bot visually, preview every reply, and take it with you as a Python-powered bot."/></svelte:head>
+
+<svelte:head>
+  <title>Discord Bot Maker — Build your bot</title>
+  <meta name="description" content="Build a Discord bot with blocks. Preview it, then export it to Python."/>
+</svelte:head>
+
 <main id="main" class="landing">
   <section class="hero">
-    <div class="hero-copy"><div class="eyebrow"><span class="status-dot"></span> A LITTLE LESS CODE. A LOT MORE POSSIBILITY.</div><h1>Your server.<br/>Your ideas.<br/><em>Your bot.</em></h1><p class="hero-description">Give your community a bot of its own.<br/>Connect a few blocks. Make something useful.</p><div class="hero-actions"><a class="button primary" href="/builder">Build a bot <ArrowRight size={17}/></a><a class="quiet-link" href="/help#python">Prefer Python? <Code size={16}/></a></div><p class="micro">Start without signing in. Export whenever you’re ready.</p></div>
-    <div class="hero-workspace"><div class="preview-top"><span><span class="status-dot"></span> A very friendly first bot</span><span>01 / HELLO</span></div><div class="demo-flow"><div class="demo-node"><div class="block-caption"><Hash size={15}/> COMMAND TRIGGER</div><strong>/hello</strong><p>When someone says hello</p></div><div class="demo-connector"><span></span><ArrowRight size={19}/></div><div class="demo-node reply-demo"><div class="block-caption"><MessageSquare size={15}/> REPLY</div><strong>A warm welcome</strong><p>Hello, {'{{user.display_name}}'}! 👋</p></div></div><div class="demo-divider"><span>AND JUST LIKE THAT</span></div><div class="discord-message"><div class="bot-avatar"><Sparkles size={22}/></div><div><div class="message-author">Your bot <span class="bot-badge">APP</span><small> Today at 12:00</small></div><p>Hello, Aaryan! 👋</p></div></div><div class="preview-bottom"><span class="status-dot"></span> A small idea, ready to come to life.</div></div>
+    <div class="hero-copy">
+      <h1>Build your<br/><em>Discord bot.</em></h1>
+      <p class="hero-description">Connect blocks. Preview replies. Export to Python.</p>
+      <div class="hero-actions">
+        <a class="button primary" href="/builder">Build a bot <ArrowRight size={17}/></a>
+        <a class="quiet-link" href="/help#python">Python library <Code size={16}/></a>
+      </div>
+    </div>
+    <div class="hero-workspace" aria-label="Example command and reply">
+      <div class="preview-top"><span><span class="status-dot"></span> /hello</span><span>PREVIEW</span></div>
+      <div class="demo-flow">
+        <div class="demo-node"><div class="block-caption"><Hash size={15}/> COMMAND</div><strong>/hello</strong></div>
+        <div class="demo-connector"><span></span><ArrowRight size={19}/></div>
+        <div class="demo-node reply-demo"><div class="block-caption"><MessageSquare size={15}/> REPLY</div><strong>Hello, {'{{user.display_name}}'}!</strong></div>
+      </div>
+      <div class="discord-message">
+        <div class="bot-avatar"><Sparkles size={22}/></div>
+        <div><div class="message-author">Your bot <span class="bot-badge">APP</span></div><p>Hello, Aaryan! 👋</p></div>
+      </div>
+    </div>
   </section>
-  <section class="feature-strip" aria-label="How it works"><article><MousePointer2 size={20}/><div><h2>Build it your way</h2><p>Drag blocks or use a simple list.</p></div></article><article><GitBranch size={20}/><div><h2>See what happens</h2><p>Test replies before they go live.</p></div></article><article><Download size={20}/><div><h2>Take it with you</h2><p>Your definition. Your Python bot.</p></div></article></section>
-  <footer><span>Made for the communities you care about.</span><a href="https://apps.aaryandehade.com">More little things by Aaryan ↗</a></footer>
+  <footer><a href="https://apps.aaryandehade.com">By Aaryan ↗</a><a href="/help">Guide</a></footer>
 </main>

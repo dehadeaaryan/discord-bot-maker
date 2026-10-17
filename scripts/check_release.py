@@ -34,7 +34,7 @@ def check(directory: Path, root: Path):
         required = {f"discord_bot_maker/{module}" for module in (
             "__init__.py", "dbot.py", "features.py", "responses.py", "interactions.py",
             "storage.py", "reminders.py", "definition.py", "engine.py", "flow.py",
-            "cli.py", "example.py", "py.typed",
+            "cli.py", "example.py", "py.typed", "AGENTS.md", "CLAUDE.md",
         )}
         if not required <= set(names):
             raise ValueError("Wheel is missing public modules or its type marker.")
@@ -54,7 +54,7 @@ def check(directory: Path, root: Path):
     with tarfile.open(source, "r:gz") as archive:
         names = archive.getnames()
         audit_members(names)
-        required = {f"{stem}/{file}" for file in ("pyproject.toml", "README.md", "LICENSE", "CHANGELOG.md", "llms.txt", "docs/authoring.md", "docs/releasing.md", "examples/sponge.py", "src/discord_bot_maker/py.typed")}
+        required = {f"{stem}/{file}" for file in ("pyproject.toml", "README.md", "LICENSE", "CHANGELOG.md", "llms.txt", "AGENTS.md", "CLAUDE.md", "src/discord_bot_maker/AGENTS.md", "src/discord_bot_maker/CLAUDE.md", "docs/authoring.md", "docs/releasing.md", "examples/sponge.py", "src/discord_bot_maker/py.typed")}
         if not required <= set(names):
             raise ValueError("Source archive is missing documentation or example source.")
         if any(member.issym() or member.islnk() for member in archive.getmembers()):

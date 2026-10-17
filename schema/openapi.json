@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Discord Bot Maker API",
-    "version": "2.0.0a1"
+    "version": "2.0.0"
   },
   "paths": {
     "/api/health": {
@@ -1040,9 +1040,7 @@
             "default": "slash"
           },
           "context": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Context"
+            "$ref": "#/components/schemas/PreviewContext"
           }
         },
         "additionalProperties": false,
@@ -1052,6 +1050,73 @@
           "command"
         ],
         "title": "Preview"
+      },
+      "PreviewContext": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "maxLength": 25,
+            "pattern": "^[0-9]+$",
+            "title": "User Id",
+            "default": "100000001"
+          },
+          "user_name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "User Name",
+            "default": "Aaryan"
+          },
+          "display_name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Display Name",
+            "default": "Aaryan"
+          },
+          "channel_id": {
+            "type": "string",
+            "maxLength": 25,
+            "pattern": "^[0-9]+$",
+            "title": "Channel Id",
+            "default": "100000002"
+          },
+          "channel_name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Channel Name",
+            "default": "general"
+          },
+          "server_id": {
+            "type": "string",
+            "maxLength": 25,
+            "pattern": "^[0-9]+$",
+            "title": "Server Id",
+            "default": "100000003"
+          },
+          "server_name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Server Name",
+            "default": "My server"
+          },
+          "message_content": {
+            "type": "string",
+            "maxLength": 4000,
+            "title": "Message Content",
+            "default": ""
+          },
+          "role_ids": {
+            "items": {
+              "type": "string",
+              "pattern": "^[0-9]{1,25}$"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Role Ids"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "PreviewContext"
       },
       "Publish": {
         "properties": {
@@ -1106,6 +1171,7 @@
         "properties": {
           "revision_id": {
             "type": "string",
+            "maxLength": 36,
             "title": "Revision Id"
           }
         },
