@@ -1,0 +1,7 @@
+# Discord Bot Maker application avatar
+
+Generated with the built-in imagegen tool, using `assets/sponge-avatar.png` as a style reference. This asset is for manual Discord upload; no remote app icon was changed.
+
+## Prompt
+
+Use case: stylized-concept. Create a finished square Discord application avatar for Discord Bot Maker. The supplied Sponge image is STYLE REFERENCE ONLY. Match luminous saturated tangerine-orange and amber translucent glossy 3D resin material, warm inner glow, bright golden rim lighting, expressive friendly mascot charm, very dark warm near-black background. Subject: an original cute compact ROBOT MAKER mascot, large softly squared robot head, rounded corners, expressive large glossy dark eyes in a darker burnt-orange inset face panel, friendly confident smile, little antenna with glowing orange tip, rounded simple chest with a small embossed code symbol </> and tiny chunky robot hands assembling a small glowing orange cube. Do not depict a sponge or a duck. Premium cinematic 3D character illustration, convincing dimensional translucent orange materials, amber reflections and a subtle orange halo. Icon composition: head and upper torso dominate, centered coherent silhouette and simple large forms readable at 48px; keep face and essential subject within central 78% for circular avatar crop. The cube and hands secondary and simple, no busy tools, no scenery. Saturated orange and golden highlights ONLY against black, no blue or purple. No words, no brand lettering, no watermark, no border. 1024x1024 square.
