@@ -30,7 +30,7 @@
 <div class="ambient" aria-hidden="true"></div>
 <header class="site-header">
   <a class="brand-link" href="/">
-    <img src="/apple-touch-icon.png" width="38" height="38" alt=""/>
+    <img src="/ad-logo.png?v=cyan-glitch-1" width="46" height="32" alt=""/>
     <span>Discord Bot Maker<span class="accent-dot">.</span></span>
   </a>
   <nav class="site-nav" aria-label="Main navigation">
@@ -72,16 +72,15 @@
     white-space: nowrap;
   }
   .brand-link img {
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
-    border: 1px solid #ffffff29;
-    transition: transform .2s, border-color .2s, box-shadow .2s;
+    width: 46px;
+    height: 32px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 8px #00eaff40);
+    transition: transform .2s, filter .2s;
   }
   .brand-link:hover img, .brand-link:focus-visible img {
-    transform: rotate(-6deg) scale(1.05);
-    border-color: #ff7a3060;
-    box-shadow: 0 0 18px #ff7a3026;
+    transform: rotate(-3deg) scale(1.05);
+    filter: drop-shadow(0 0 11px #00eaff73);
   }
   .accent-dot { color: var(--accent); }
   .site-nav { display: flex; align-items: center; gap: 12px; }
@@ -105,7 +104,7 @@
   @media (max-width: 640px) {
     .site-header { width: calc(100% - 24px); margin-top: 12px; min-height: 64px; padding: 10px 14px; gap: 8px; }
     .brand-link { font-size: clamp(14px, 4.2vw, 22px); gap: 8px; }
-    .brand-link img { width: 32px; height: 32px; }
+    .brand-link img { width: 42px; height: 28px; }
     .site-nav { gap: 6px; }
     .header-button { padding: 9px 11px; font-size: 11px; }
     .desktop-link { display: none; }
