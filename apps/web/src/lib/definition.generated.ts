@@ -13,16 +13,45 @@ export type Prefix = string;
  * @maxItems 128
  */
 export type Nodes = [
-  Trigger | Reply | Embed | Condition,
-  Trigger | Reply | Embed | Condition,
-  ...(Trigger | Reply | Embed | Condition)[]
+  Trigger | Reply | Embed | Condition | InteractiveMessage | Form | Action,
+  Trigger | Reply | Embed | Condition | InteractiveMessage | Form | Action,
+  ...(Trigger | Reply | Embed | Condition | InteractiveMessage | Form | Action)[]
 ];
 export type Id = string;
 export type Kind = "trigger";
 export type Name1 = string;
 export type Description = string;
-export type Mode = "slash" | "prefix";
+export type Mode = "slash" | "prefix" | "both";
 export type Cooldown = number;
+export type Category = string;
+export type ServerOnly = boolean;
+/**
+ * @maxItems 25
+ */
+export type Channels = string[];
+/**
+ * @maxItems 25
+ */
+export type Roles = string[];
+export type AgeRestricted = boolean;
+export type Permission = string | null;
+export type Name2 = string;
+export type Description1 = string;
+export type Type = "str" | "int" | "float" | "bool";
+export type Required = boolean;
+export type Default = string | number | number | boolean | null;
+/**
+ * @maxItems 25
+ */
+export type Choices = string[];
+/**
+ * @maxItems 25
+ */
+export type Autocomplete = string[];
+/**
+ * @maxItems 25
+ */
+export type Options = CommandOption[];
 export type Id1 = string;
 export type Kind1 = "reply";
 export type Content = string;
@@ -30,25 +59,208 @@ export type Ephemeral = boolean;
 export type Id2 = string;
 export type Kind2 = "embed";
 export type Title = string;
-export type Description1 = string;
+export type Description2 = string;
 export type Color = string;
 export type ImageUrl = string | null;
+export type ThumbnailUrl = string | null;
+export type Url = string | null;
+export type Footer = string;
+export type Name3 = string;
+export type Value = string;
+export type Inline = boolean;
+/**
+ * @maxItems 25
+ */
+export type Fields = EmbedField[];
 export type Ephemeral1 = boolean;
 export type Id3 = string;
 export type Kind3 = "condition";
 export type Field = "role" | "channel";
-export type Value = string;
+export type Value1 = string;
+export type Id4 = string;
+export type Kind4 = "message";
+export type Content1 = string;
+/**
+ * @maxItems 5
+ */
+export type Buttons =
+  | []
+  | [VisualButton]
+  | [VisualButton, VisualButton]
+  | [VisualButton, VisualButton, VisualButton]
+  | [VisualButton, VisualButton, VisualButton, VisualButton]
+  | [VisualButton, VisualButton, VisualButton, VisualButton, VisualButton];
+export type Label = string;
+export type Reply1 = string;
+export type Url1 = string | null;
+export type Style = "primary" | "secondary" | "success" | "danger";
+/**
+ * @maxItems 4
+ */
+export type Selects =
+  | []
+  | [VisualSelect]
+  | [VisualSelect, VisualSelect]
+  | [VisualSelect, VisualSelect, VisualSelect]
+  | [VisualSelect, VisualSelect, VisualSelect, VisualSelect];
+export type Placeholder = string;
+/**
+ * @minItems 1
+ * @maxItems 25
+ */
+export type Options1 = [string, ...string[]];
+export type Reply2 = string;
+/**
+ * @maxItems 10
+ */
+export type Attachments =
+  | []
+  | [VisualAttachment]
+  | [VisualAttachment, VisualAttachment]
+  | [VisualAttachment, VisualAttachment, VisualAttachment]
+  | [VisualAttachment, VisualAttachment, VisualAttachment, VisualAttachment]
+  | [VisualAttachment, VisualAttachment, VisualAttachment, VisualAttachment, VisualAttachment]
+  | [VisualAttachment, VisualAttachment, VisualAttachment, VisualAttachment, VisualAttachment, VisualAttachment]
+  | [
+      VisualAttachment,
+      VisualAttachment,
+      VisualAttachment,
+      VisualAttachment,
+      VisualAttachment,
+      VisualAttachment,
+      VisualAttachment
+    ]
+  | [
+      VisualAttachment,
+      VisualAttachment,
+      VisualAttachment,
+      VisualAttachment,
+      VisualAttachment,
+      VisualAttachment,
+      VisualAttachment,
+      VisualAttachment
+    ]
+  | [
+      VisualAttachment,
+      VisualAttachment,
+      VisualAttachment,
+      VisualAttachment,
+      VisualAttachment,
+      VisualAttachment,
+      VisualAttachment,
+      VisualAttachment,
+      VisualAttachment
+    ]
+  | [
+      VisualAttachment,
+      VisualAttachment,
+      VisualAttachment,
+      VisualAttachment,
+      VisualAttachment,
+      VisualAttachment,
+      VisualAttachment,
+      VisualAttachment,
+      VisualAttachment,
+      VisualAttachment
+    ];
+export type Filename = string;
+export type Content2 = string;
+export type OwnerOnly = boolean;
+export type Timeout = number;
+export type Ephemeral2 = boolean;
+export type Id5 = string;
+export type Kind5 = "form";
+export type Title1 = string;
+/**
+ * @minItems 1
+ * @maxItems 5
+ */
+export type Inputs =
+  | [VisualInput]
+  | [VisualInput, VisualInput]
+  | [VisualInput, VisualInput, VisualInput]
+  | [VisualInput, VisualInput, VisualInput, VisualInput]
+  | [VisualInput, VisualInput, VisualInput, VisualInput, VisualInput];
+export type Name4 = string;
+export type Label1 = string;
+export type Required1 = boolean;
+export type MaxLength = number;
+export type Paragraph = boolean;
+export type Response = string;
+export type Id6 = string;
+export type Kind6 = "action";
+export type Operation =
+  | "store_get"
+  | "store_set"
+  | "store_increment"
+  | "setting_get"
+  | "setting_set"
+  | "moderation"
+  | "schedule"
+  | "cancel_job";
+export type Key = string;
+export type Value2 = string;
+export type Target = string;
+export type ModerationAction = "kick" | "ban" | "timeout";
+export type Reason = string;
+export type Minutes = number;
+export type Delay = number;
+export type Retries = number;
+export type Response1 = string;
+export type Ephemeral3 = boolean;
 /**
  * @minItems 1
  * @maxItems 256
  */
 export type Edges = [Edge, ...Edge[]];
-export type Id4 = string;
+export type Id7 = string;
 export type Source = string;
-export type Target = string;
+export type Target1 = string;
 export type Branch = "next" | "true" | "false";
 export type X = number;
 export type Y = number;
+export type Presence = string;
+export type Status = "online" | "idle" | "dnd" | "invisible";
+export type MessageContent = boolean;
+export type Members = boolean;
+export type MentionUsers = boolean;
+export type MentionRoles = boolean;
+export type MentionEveryone = boolean;
+export type Help = boolean;
+export type HelpPageSize = number;
+/**
+ * @maxItems 3
+ */
+export type Packs =
+  | []
+  | ["polls" | "reminders" | "moderation"]
+  | ["polls" | "reminders" | "moderation", "polls" | "reminders" | "moderation"]
+  | ["polls" | "reminders" | "moderation", "polls" | "reminders" | "moderation", "polls" | "reminders" | "moderation"];
+export type Event = "message" | "member_join" | "reaction_add";
+export type Match = string;
+export type Response2 = string;
+export type ChannelId = string | null;
+export type RoleId = string | null;
+export type Exact = boolean;
+/**
+ * @maxItems 25
+ */
+export type Hooks = EventHook[];
+export type Version = number;
+export type FromVersion = number;
+/**
+ * @maxItems 50
+ */
+export type Migrations = SettingMigration[];
+export type Id8 = string;
+export type ChannelId1 = string;
+export type Seconds = number;
+export type Response3 = string;
+export type Retries1 = number;
+/**
+ * @maxItems 25
+ */
+export type Schedules = ScheduleConfig[];
 
 export interface BotDefinition {
   schema_version?: SchemaVersion;
@@ -57,6 +269,7 @@ export interface BotDefinition {
   nodes: Nodes;
   edges: Edges;
   layout?: Layout;
+  runtime?: RuntimeConfig;
 }
 export interface Trigger {
   id: Id;
@@ -65,6 +278,25 @@ export interface Trigger {
   description?: Description;
   mode?: Mode;
   cooldown?: Cooldown;
+  category?: Category;
+  checks?: CommandChecks;
+  options?: Options;
+}
+export interface CommandChecks {
+  server_only?: ServerOnly;
+  channels?: Channels;
+  roles?: Roles;
+  age_restricted?: AgeRestricted;
+  permission?: Permission;
+}
+export interface CommandOption {
+  name: Name2;
+  description?: Description1;
+  type?: Type;
+  required?: Required;
+  default?: Default;
+  choices?: Choices;
+  autocomplete?: Autocomplete;
 }
 export interface Reply {
   id: Id1;
@@ -76,21 +308,85 @@ export interface Embed {
   id: Id2;
   kind?: Kind2;
   title?: Title;
-  description?: Description1;
+  description?: Description2;
   color?: Color;
   image_url?: ImageUrl;
+  thumbnail_url?: ThumbnailUrl;
+  url?: Url;
+  footer?: Footer;
+  fields?: Fields;
   ephemeral?: Ephemeral1;
+}
+export interface EmbedField {
+  name: Name3;
+  value: Value;
+  inline?: Inline;
 }
 export interface Condition {
   id: Id3;
   kind?: Kind3;
   field?: Field;
-  value?: Value;
+  value?: Value1;
+}
+export interface InteractiveMessage {
+  id: Id4;
+  kind?: Kind4;
+  content?: Content1;
+  buttons?: Buttons;
+  selects?: Selects;
+  attachments?: Attachments;
+  owner_only?: OwnerOnly;
+  timeout?: Timeout;
+  ephemeral?: Ephemeral2;
+}
+export interface VisualButton {
+  label?: Label;
+  reply?: Reply1;
+  url?: Url1;
+  style?: Style;
+}
+export interface VisualSelect {
+  placeholder?: Placeholder;
+  options?: Options1;
+  reply?: Reply2;
+}
+export interface VisualAttachment {
+  filename?: Filename;
+  content?: Content2;
+}
+export interface Form {
+  id: Id5;
+  kind?: Kind5;
+  title?: Title1;
+  inputs?: Inputs;
+  response?: Response;
+}
+export interface VisualInput {
+  name: Name4;
+  label: Label1;
+  required?: Required1;
+  max_length?: MaxLength;
+  paragraph?: Paragraph;
+}
+export interface Action {
+  id: Id6;
+  kind?: Kind6;
+  operation?: Operation;
+  key?: Key;
+  value?: Value2;
+  target?: Target;
+  moderation_action?: ModerationAction;
+  reason?: Reason;
+  minutes?: Minutes;
+  delay?: Delay;
+  retries?: Retries;
+  response?: Response1;
+  ephemeral?: Ephemeral3;
 }
 export interface Edge {
-  id: Id4;
+  id: Id7;
   source: Source;
-  target: Target;
+  target: Target1;
   branch?: Branch;
 }
 export interface Layout {
@@ -102,4 +398,49 @@ export interface Positions {
 export interface Position {
   x: X;
   y: Y;
+}
+export interface RuntimeConfig {
+  presence?: Presence;
+  status?: Status;
+  message_content?: MessageContent;
+  members?: Members;
+  mention_users?: MentionUsers;
+  mention_roles?: MentionRoles;
+  mention_everyone?: MentionEveryone;
+  help?: Help;
+  help_page_size?: HelpPageSize;
+  packs?: Packs;
+  hooks?: Hooks;
+  settings?: ServerSettingsConfig;
+  schedules?: Schedules;
+}
+export interface EventHook {
+  event?: Event;
+  match?: Match;
+  response?: Response2;
+  channel_id?: ChannelId;
+  role_id?: RoleId;
+  exact?: Exact;
+}
+export interface ServerSettingsConfig {
+  version?: Version;
+  defaults?: Defaults;
+  migrations?: Migrations;
+}
+export interface Defaults {
+  [k: string]: string | number | boolean;
+}
+export interface SettingMigration {
+  from_version: FromVersion;
+  rename?: Rename;
+}
+export interface Rename {
+  [k: string]: string;
+}
+export interface ScheduleConfig {
+  id: Id8;
+  channel_id: ChannelId1;
+  seconds?: Seconds;
+  response?: Response3;
+  retries?: Retries1;
 }

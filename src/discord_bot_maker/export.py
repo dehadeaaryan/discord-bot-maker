@@ -7,7 +7,9 @@ from .definition import BotDefinition
 
 LAUNCHER = '''import os
 from pathlib import Path
-from discord_bot_maker import BotDefinition, FlowBot
+from discord_bot_maker import BotDefinition, FlowBot, configure_logging
+
+configure_logging()
 
 definition = BotDefinition.model_validate_json(Path(__file__).with_name("bot.json").read_text())
 # Synchronize only when publishing a changed command definition.
@@ -84,6 +86,6 @@ def export_archive(definition: BotDefinition) -> bytes:
     with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("bot.json", definition.model_dump_json(indent=2))
         archive.writestr("run_bot.py", LAUNCHER)
-        archive.writestr("requirements.txt", "discord-bot-maker>=2.0.0,<3\n")
+        archive.writestr("requirements.txt", "discord-bot-maker>=2.1.1,<3\n")
         archive.writestr("README.md", EXPORT_README)
     return output.getvalue()

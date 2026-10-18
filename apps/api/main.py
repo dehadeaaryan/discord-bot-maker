@@ -6,7 +6,7 @@ import json
 import secrets
 import time
 from contextlib import asynccontextmanager
-from typing import Annotated
+from typing import Annotated, Any
 from urllib.parse import urlencode
 
 import httpx
@@ -42,6 +42,23 @@ class PreviewContext(Input):
     server_name: str = Field(default="My server", max_length=100)
     message_content: str = Field(default="", max_length=4000)
     role_ids: list[Annotated[str, Field(pattern=r"^[0-9]{1,25}$")]] = Field(default_factory=list, max_length=100)
+    permissions: list[str] = Field(default_factory=list, max_length=60)
+    age_restricted: bool = False
+    in_server: bool = True
+
+
+class ComponentInput(Input):
+    node_id: str = Field(max_length=80)
+    type: str = Field(pattern="^(button|select|form)$")
+    index: int = Field(default=0, ge=0, le=24)
+    value: str = Field(default="", max_length=100)
+    inputs: dict[str, str] = Field(default_factory=dict, max_length=5)
+    owner_id: str = Field(default="100000001", max_length=25)
+
+
+class PreviewState(Input):
+    values: dict[str, dict[str, Any]] = Field(default_factory=dict, max_length=100)
+    jobs: dict[str, dict[str, Any]] = Field(default_factory=dict, max_length=100)
 
 
 class Preview(Input):
@@ -49,6 +66,22 @@ class Preview(Input):
     command: str = Field(max_length=32)
     mode: str = Field(default="slash", pattern="^(slash|prefix)$")
     context: PreviewContext = Field(default_factory=PreviewContext)
+    options: dict[str, str | int | float | bool] = Field(default_factory=dict, max_length=25)
+    component: ComponentInput | None = None
+    state: PreviewState = Field(default_factory=PreviewState)
+
+
+class HookPreview(Input):
+    definition: BotDefinition
+    index: int = Field(ge=0, le=24)
+    context: PreviewContext = Field(default_factory=PreviewContext)
+    match: str = Field(default="hello bot", max_length=4000)
+
+
+class SyncPreview(Input):
+    definition: BotDefinition
+    remote: list[dict[str, Any]] = Field(default_factory=list, max_length=100)
+    guild_id: str | None = Field(default=None, pattern=r"^[1-9][0-9]{0,19}$")
 
 
 class Save(Input):
@@ -84,7 +117,7 @@ def create_app(settings: Settings | None = None):
         yield
         engine.dispose()
 
-    app = FastAPI(title="Discord Bot Maker API", version="2.0.0", lifespan=lifespan,
+    app = FastAPI(title="Discord Bot Maker API", version="2.1.1", lifespan=lifespan,
                   docs_url=None if settings.production else "/docs",
                   redoc_url=None if settings.production else "/redoc",
                   openapi_url=None if settings.production else "/openapi.json")
@@ -172,11 +205,53 @@ def create_app(settings: Settings | None = None):
     def templates():
         return {name: template(name).model_dump(mode="json") for name in ("greeting", "rules", "faq")}
 
+    @app.post("/api/preview-hook")
+    def preview_hook(body: HookPreview):
+        from discord_bot_maker.definition import VARIABLE_PATTERN
+        hooks = body.definition.runtime.hooks
+        if body.index >= len(hooks):
+            raise HTTPException(422, "Event hook not found.")
+        hook = hooks[body.index]
+        context = Context(**body.context.model_dump())
+        matched = not hook.channel_id or hook.channel_id == context.channel_id
+        if hook.event == "message":
+            text, needle = body.match.casefold(), hook.match.casefold()
+            matched = matched and (text == needle if hook.exact else needle in text)
+            context.message_content = body.match
+        elif hook.event == "reaction_add":
+            matched = matched and body.match == hook.match
+        else:
+            matched = context.in_server
+            context.channel_id = hook.channel_id
+        values = context.variables()
+        content = VARIABLE_PATTERN.sub(lambda m: str(values[m.group(1)]), hook.response) if matched else "The event did not match this hook."
+        if len(content) > 2000:
+            raise HTTPException(422, "Rendered hook response exceeds Discord's limit.")
+        messages = [{"kind": "reply", "content": content, "ephemeral": False}]
+        if matched and hook.role_id:
+            messages.append({"kind": "reply", "content": f"Simulated auto-role: {hook.role_id}. Live assignment requires Manage Roles and a lower role than the bot.", "ephemeral": False})
+        return {"messages": messages, "trace": [{"id": "hook", "kind": hook.event, "result": "matched" if matched else "not matched"}], "state": {"values": {}, "jobs": {}}}
+
+    @app.post("/api/sync-preview")
+    def registration_preview(body: SyncPreview):
+        from discord_bot_maker.visual_runtime import VisualBot
+        import asyncio
+        async def inspect():
+            client = VisualBot(body.definition, storage=":memory:", guild_id=int(body.guild_id) if body.guild_id else None)
+            try:
+                return client.dbm.sync_preview(body.remote)
+            finally:
+                await client.close()
+        try:
+            return asyncio.run(inspect())
+        except (ValueError, TypeError, KeyError) as error:
+            raise HTTPException(422, "Invalid registration snapshot or bot configuration.") from None
+
     @app.post("/api/preview")
     def preview(body: Preview):
         try:
             context = Context(**body.context.model_dump())
-            return Engine(body.definition).execute(body.command, context, body.mode)
+            return Engine(body.definition, state=body.state.model_dump()).execute(body.command, context, body.mode, options=body.options, component=body.component.model_dump() if body.component else None)
         except (ValueError, TypeError) as error:
             raise HTTPException(422, str(error)) from None
 

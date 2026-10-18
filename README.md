@@ -24,7 +24,7 @@ a real bot, including a pet duck, saved snack counts, server settings, polls and
 restart-safe reminders. Sponge's personality lives in its script; the library is
 reusable for any bot.
 
-The prepared next release is **2.1.0** (unreleased). The package supports Python
+The prepared next release is **2.1.1** (unreleased). The package supports Python
 3.10+; this checkout is tested on Python 3.15.0. The 2.1 features have offline
 coverage, including real Discord command parsing, but still need live Discord
 and container deployment verification.
@@ -464,7 +464,7 @@ discord-bot-maker scaffold --output ./my-bot
 This creates bot.py, requirements.txt, Dockerfile, compose.yaml, ignore files and
 setup instructions without overwriting files. The Compose resource works as a
 Coolify starting point with environment credentials, a persistent data volume,
-one replica, readiness checks and SIGTERM shutdown. The 2.1.0 pin requires that
+one replica, readiness checks and SIGTERM shutdown. The 2.1.1 pin requires that
 release to exist before a normal registry image build. Generated templates still
 need a real container smoke test in the deployment environment.
 
@@ -477,6 +477,31 @@ graph export instead of silently losing behavior. Existing simple embeds still
 export. PostgreSQL storage, restart-persistent views, distributed execution and a
 plugin marketplace are deferred. Live Discord integration and container deployment
 must be verified separately; offline tests do not certify production operation.
+
+## Visual builder: 2.1 features
+
+The web editor can now save and export declarative 2.1 bots. Command blocks support
+slash/prefix/both modes, typed arguments, defaults, choices, autocomplete, categories
+and permission/server/channel/role/age-restricted checks. Embed blocks include
+fields, footer, thumbnail and title links. Interactive blocks add reply/link
+buttons, dropdowns and text attachments; Form blocks collect text inputs.
+
+Expand **Bot configuration & features** for presence, intents, mention policy,
+searchable help, built-in polls/reminders/moderation packs, event hooks, auto-roles,
+versioned setting defaults/migrations and recurring announcements. Action blocks
+read/write server data, change versioned settings with Manage Server permission,
+schedule messages, cancel owned jobs and request confirmed moderation.
+
+Preview simulates arguments, permissions, roles, forms, component clicks and event
+matches without connecting to Discord. Sample storage is kept between runs until
+reset. Registration comparison diffs an explicitly supplied Discord snapshot;
+it does not read credentials or synchronize commands. Exports and the hosted
+runner use the same bounded interpreter and managed 2.1 command/response pipeline.
+
+Arbitrary Python callbacks/plugins stay in the Python API. Visual attachments are
+text files; interactive views expire; bot storage is SQLite, with one process per
+file. Hosted bots need the persistent runtime-data volume. See the in-app setup
+guide and [web 2.1 guide](docs/web-v2.1.md) for workflows and limitations.
 
 ## Coding agents
 
@@ -522,10 +547,10 @@ MIT licensed. Created by Aaryan Dehade.
 
 ## PyPI release
 
-After publishing 2.1.0, install the [stable release on PyPI](https://pypi.org/project/discord-bot-maker/) with:
+After publishing 2.1.1, install the [stable release on PyPI](https://pypi.org/project/discord-bot-maker/) with:
 
 ```sh
-python -m pip install --upgrade 'discord-bot-maker==2.1.0'
+python -m pip install --upgrade 'discord-bot-maker==2.1.1'
 ```
 
 See the [release guide](https://github.com/dehadeaaryan/discord-bot-maker/blob/main/docs/releasing.md),

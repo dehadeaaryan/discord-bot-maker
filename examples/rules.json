@@ -9,7 +9,16 @@
       "name": "rules",
       "description": "Read the server rules",
       "mode": "slash",
-      "cooldown": 0
+      "cooldown": 0,
+      "category": "General",
+      "checks": {
+        "server_only": false,
+        "channels": [],
+        "roles": [],
+        "age_restricted": false,
+        "permission": null
+      },
+      "options": []
     },
     {
       "id": "reply-1",
@@ -37,5 +46,24 @@
         "y": 120.0
       }
     }
+  },
+  "runtime": {
+    "presence": "",
+    "status": "online",
+    "message_content": false,
+    "members": false,
+    "mention_users": false,
+    "mention_roles": false,
+    "mention_everyone": false,
+    "help": false,
+    "help_page_size": 6,
+    "packs": [],
+    "hooks": [],
+    "settings": {
+      "version": 1,
+      "defaults": {},
+      "migrations": []
+    },
+    "schedules": []
   }
 }

@@ -205,3 +205,44 @@ def test_oauth_exchange_creates_hashed_session_and_logout_revokes_it(api, monkey
     client.headers['x-csrf-token'] = user['csrf']
     assert client.post('/api/auth/logout').status_code == 204
     assert client.get('/api/auth/me').status_code == 401
+
+
+def test_visual_v21_preview_state_components_and_registration(api):
+    client, _, _ = api
+    definition = template().model_dump(mode='json')
+    definition['nodes'][0].update(mode='both',options=[{'name':'topic','type':'str'}])
+    definition['nodes'][1]={'id':'reply-1','kind':'message','content':'Topic {{options.topic}}','buttons':[{'label':'Click','reply':'Hi {{user.display_name}}'}]}
+    definition['runtime'].update(help=True,hooks=[{'event':'message','match':'hello bot','response':'Hello {{user.display_name}}'}])
+    body={'definition':definition,'command':'hello','mode':'prefix','options':{'topic':'Python'}}
+    result=client.post('/api/preview',json=body)
+    assert result.status_code==200,result.text
+    assert result.json()['messages'][0]['content']=='Topic Python'
+    body['component']={'node_id':'reply-1','type':'button','index':0}
+    clicked=client.post('/api/preview',json=body)
+    assert clicked.json()['messages'][0]['content']=='Hi Aaryan'
+    registration=client.post('/api/sync-preview',json={'definition':definition,'remote':[],'guild_id':'123456789123456789'})
+    assert registration.status_code==200,registration.text
+    assert registration.json()['guild_id']==123456789123456789
+    assert {c['name'] for c in registration.json()['changes']}=={'hello','help'}
+    event=client.post('/api/preview-hook',json={'definition':definition,'index':0,'match':'hello bot','context':{'display_name':'Jess'}})
+    assert event.status_code==200,event.text
+    assert event.json()['messages'][0]['content']=='Hello Jess'
+    assert client.post('/api/sync-preview',json={'definition':definition,'remote':[{'invalid':'snapshot'}]}).status_code==422
+    login(client)
+    saved=client.post('/api/projects',json=definition)
+    assert saved.status_code==201,saved.text
+    restored=client.get('/api/projects/'+saved.json()['id']).json()['definition']
+    assert restored['runtime']['help']
+    assert restored['nodes'][0]['mode']=='both'
+
+
+def test_visual_preview_mutation_is_isolated_and_export_preserves_configuration(api):
+    client,_,_=api
+    definition=template().model_dump(mode='json')
+    definition['nodes'][1]={'id':'reply-1','kind':'action','operation':'store_increment','key':'visits','value':'1'}
+    first=client.post('/api/preview',json={'definition':definition,'command':'hello'}).json()
+    assert first['messages'][0]['content']=='Value: 1'
+    second=client.post('/api/preview',json={'definition':definition,'command':'hello','state':first['state']}).json()
+    assert second['messages'][0]['content']=='Value: 2'
+    fresh=client.post('/api/preview',json={'definition':definition,'command':'hello'}).json()
+    assert fresh['messages'][0]['content']=='Value: 1'

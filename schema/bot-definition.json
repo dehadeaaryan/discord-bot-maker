@@ -1,5 +1,233 @@
 {
   "$defs": {
+    "Action": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "const": "action",
+          "default": "action",
+          "title": "Kind",
+          "type": "string"
+        },
+        "operation": {
+          "default": "store_get",
+          "enum": [
+            "store_get",
+            "store_set",
+            "store_increment",
+            "setting_get",
+            "setting_set",
+            "moderation",
+            "schedule",
+            "cancel_job"
+          ],
+          "title": "Operation",
+          "type": "string"
+        },
+        "key": {
+          "default": "visits",
+          "pattern": "^[a-z][a-z0-9_]{0,31}$",
+          "title": "Key",
+          "type": "string"
+        },
+        "value": {
+          "default": "1",
+          "maxLength": 2000,
+          "title": "Value",
+          "type": "string"
+        },
+        "target": {
+          "default": "{{options.member_id}}",
+          "maxLength": 100,
+          "title": "Target",
+          "type": "string"
+        },
+        "moderation_action": {
+          "default": "kick",
+          "enum": [
+            "kick",
+            "ban",
+            "timeout"
+          ],
+          "title": "Moderation Action",
+          "type": "string"
+        },
+        "reason": {
+          "default": "Moderator request",
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "minutes": {
+          "default": 10,
+          "maximum": 40320,
+          "minimum": 1,
+          "title": "Minutes",
+          "type": "integer"
+        },
+        "delay": {
+          "default": 60,
+          "maximum": 31536000,
+          "minimum": 0,
+          "title": "Delay",
+          "type": "integer"
+        },
+        "retries": {
+          "default": 3,
+          "maximum": 10,
+          "minimum": 0,
+          "title": "Retries",
+          "type": "integer"
+        },
+        "response": {
+          "default": "Value: {{store.value}}",
+          "maxLength": 2000,
+          "minLength": 1,
+          "title": "Response",
+          "type": "string"
+        },
+        "ephemeral": {
+          "default": true,
+          "title": "Ephemeral",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "Action",
+      "type": "object"
+    },
+    "CommandChecks": {
+      "additionalProperties": false,
+      "properties": {
+        "server_only": {
+          "default": false,
+          "title": "Server Only",
+          "type": "boolean"
+        },
+        "channels": {
+          "items": {
+            "pattern": "^[1-9][0-9]{0,19}$",
+            "type": "string"
+          },
+          "maxItems": 25,
+          "title": "Channels",
+          "type": "array"
+        },
+        "roles": {
+          "items": {
+            "pattern": "^[1-9][0-9]{0,19}$",
+            "type": "string"
+          },
+          "maxItems": 25,
+          "title": "Roles",
+          "type": "array"
+        },
+        "age_restricted": {
+          "default": false,
+          "title": "Age Restricted",
+          "type": "boolean"
+        },
+        "permission": {
+          "anyOf": [
+            {
+              "maxLength": 50,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Permission"
+        }
+      },
+      "title": "CommandChecks",
+      "type": "object"
+    },
+    "CommandOption": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}$",
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "default": "Command argument",
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "type": {
+          "default": "str",
+          "enum": [
+            "str",
+            "int",
+            "float",
+            "bool"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "required": {
+          "default": true,
+          "title": "Required",
+          "type": "boolean"
+        },
+        "default": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Default"
+        },
+        "choices": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 25,
+          "title": "Choices",
+          "type": "array"
+        },
+        "autocomplete": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 25,
+          "title": "Autocomplete",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "CommandOption",
+      "type": "object"
+    },
     "Condition": {
       "additionalProperties": false,
       "properties": {
@@ -122,6 +350,50 @@
           "default": null,
           "title": "Image Url"
         },
+        "thumbnail_url": {
+          "anyOf": [
+            {
+              "format": "uri",
+              "maxLength": 2083,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Thumbnail Url"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "format": "uri",
+              "maxLength": 2083,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Url"
+        },
+        "footer": {
+          "default": "",
+          "maxLength": 2048,
+          "title": "Footer",
+          "type": "string"
+        },
+        "fields": {
+          "items": {
+            "$ref": "#/$defs/EmbedField"
+          },
+          "maxItems": 25,
+          "title": "Fields",
+          "type": "array"
+        },
         "ephemeral": {
           "default": false,
           "title": "Ephemeral",
@@ -132,6 +404,211 @@
         "id"
       ],
       "title": "Embed",
+      "type": "object"
+    },
+    "EmbedField": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "value": {
+          "maxLength": 1024,
+          "minLength": 1,
+          "title": "Value",
+          "type": "string"
+        },
+        "inline": {
+          "default": false,
+          "title": "Inline",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "value"
+      ],
+      "title": "EmbedField",
+      "type": "object"
+    },
+    "EventHook": {
+      "additionalProperties": false,
+      "properties": {
+        "event": {
+          "default": "message",
+          "enum": [
+            "message",
+            "member_join",
+            "reaction_add"
+          ],
+          "title": "Event",
+          "type": "string"
+        },
+        "match": {
+          "default": "hello",
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Match",
+          "type": "string"
+        },
+        "response": {
+          "default": "Hello, {{user.display_name}}!",
+          "maxLength": 2000,
+          "minLength": 1,
+          "title": "Response",
+          "type": "string"
+        },
+        "channel_id": {
+          "anyOf": [
+            {
+              "pattern": "^[1-9][0-9]{0,19}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Channel Id"
+        },
+        "role_id": {
+          "anyOf": [
+            {
+              "pattern": "^[1-9][0-9]{0,19}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Role Id"
+        },
+        "exact": {
+          "default": true,
+          "title": "Exact",
+          "type": "boolean"
+        }
+      },
+      "title": "EventHook",
+      "type": "object"
+    },
+    "Form": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "const": "form",
+          "default": "form",
+          "title": "Kind",
+          "type": "string"
+        },
+        "title": {
+          "default": "Feedback",
+          "maxLength": 45,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "inputs": {
+          "items": {
+            "$ref": "#/$defs/VisualInput"
+          },
+          "maxItems": 5,
+          "minItems": 1,
+          "title": "Inputs",
+          "type": "array"
+        },
+        "response": {
+          "default": "Thanks for your feedback!",
+          "maxLength": 2000,
+          "minLength": 1,
+          "title": "Response",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "Form",
+      "type": "object"
+    },
+    "InteractiveMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "const": "message",
+          "default": "message",
+          "title": "Kind",
+          "type": "string"
+        },
+        "content": {
+          "default": "Choose an action",
+          "maxLength": 2000,
+          "minLength": 1,
+          "title": "Content",
+          "type": "string"
+        },
+        "buttons": {
+          "items": {
+            "$ref": "#/$defs/VisualButton"
+          },
+          "maxItems": 5,
+          "title": "Buttons",
+          "type": "array"
+        },
+        "selects": {
+          "items": {
+            "$ref": "#/$defs/VisualSelect"
+          },
+          "maxItems": 4,
+          "title": "Selects",
+          "type": "array"
+        },
+        "attachments": {
+          "items": {
+            "$ref": "#/$defs/VisualAttachment"
+          },
+          "maxItems": 10,
+          "title": "Attachments",
+          "type": "array"
+        },
+        "owner_only": {
+          "default": true,
+          "title": "Owner Only",
+          "type": "boolean"
+        },
+        "timeout": {
+          "default": 180,
+          "maximum": 900,
+          "minimum": 1,
+          "title": "Timeout",
+          "type": "integer"
+        },
+        "ephemeral": {
+          "default": false,
+          "title": "Ephemeral",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "InteractiveMessage",
       "type": "object"
     },
     "Layout": {
@@ -206,6 +683,208 @@
       "title": "Reply",
       "type": "object"
     },
+    "RuntimeConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "presence": {
+          "default": "",
+          "maxLength": 128,
+          "title": "Presence",
+          "type": "string"
+        },
+        "status": {
+          "default": "online",
+          "enum": [
+            "online",
+            "idle",
+            "dnd",
+            "invisible"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "message_content": {
+          "default": false,
+          "title": "Message Content",
+          "type": "boolean"
+        },
+        "members": {
+          "default": false,
+          "title": "Members",
+          "type": "boolean"
+        },
+        "mention_users": {
+          "default": false,
+          "title": "Mention Users",
+          "type": "boolean"
+        },
+        "mention_roles": {
+          "default": false,
+          "title": "Mention Roles",
+          "type": "boolean"
+        },
+        "mention_everyone": {
+          "default": false,
+          "title": "Mention Everyone",
+          "type": "boolean"
+        },
+        "help": {
+          "default": false,
+          "title": "Help",
+          "type": "boolean"
+        },
+        "help_page_size": {
+          "default": 6,
+          "maximum": 10,
+          "minimum": 1,
+          "title": "Help Page Size",
+          "type": "integer"
+        },
+        "packs": {
+          "items": {
+            "enum": [
+              "polls",
+              "reminders",
+              "moderation"
+            ],
+            "type": "string"
+          },
+          "maxItems": 3,
+          "title": "Packs",
+          "type": "array"
+        },
+        "hooks": {
+          "items": {
+            "$ref": "#/$defs/EventHook"
+          },
+          "maxItems": 25,
+          "title": "Hooks",
+          "type": "array"
+        },
+        "settings": {
+          "$ref": "#/$defs/ServerSettingsConfig"
+        },
+        "schedules": {
+          "items": {
+            "$ref": "#/$defs/ScheduleConfig"
+          },
+          "maxItems": 25,
+          "title": "Schedules",
+          "type": "array"
+        }
+      },
+      "title": "RuntimeConfig",
+      "type": "object"
+    },
+    "ScheduleConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[a-z][a-z0-9_-]{0,31}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "channel_id": {
+          "pattern": "^[1-9][0-9]{0,19}$",
+          "title": "Channel Id",
+          "type": "string"
+        },
+        "seconds": {
+          "default": 3600,
+          "maximum": 31536000,
+          "minimum": 60,
+          "title": "Seconds",
+          "type": "integer"
+        },
+        "response": {
+          "default": "Scheduled announcement",
+          "maxLength": 2000,
+          "minLength": 1,
+          "title": "Response",
+          "type": "string"
+        },
+        "retries": {
+          "default": 3,
+          "maximum": 10,
+          "minimum": 0,
+          "title": "Retries",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "channel_id"
+      ],
+      "title": "ScheduleConfig",
+      "type": "object"
+    },
+    "ServerSettingsConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "default": 1,
+          "maximum": 1000,
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        },
+        "defaults": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              }
+            ]
+          },
+          "maxProperties": 50,
+          "title": "Defaults",
+          "type": "object"
+        },
+        "migrations": {
+          "items": {
+            "$ref": "#/$defs/SettingMigration"
+          },
+          "maxItems": 50,
+          "title": "Migrations",
+          "type": "array"
+        }
+      },
+      "title": "ServerSettingsConfig",
+      "type": "object"
+    },
+    "SettingMigration": {
+      "additionalProperties": false,
+      "properties": {
+        "from_version": {
+          "maximum": 1000,
+          "minimum": 1,
+          "title": "From Version",
+          "type": "integer"
+        },
+        "rename": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "maxProperties": 50,
+          "title": "Rename",
+          "type": "object"
+        }
+      },
+      "required": [
+        "from_version"
+      ],
+      "title": "SettingMigration",
+      "type": "object"
+    },
     "Trigger": {
       "additionalProperties": false,
       "properties": {
@@ -237,7 +916,8 @@
           "default": "slash",
           "enum": [
             "slash",
-            "prefix"
+            "prefix",
+            "both"
           ],
           "title": "Mode",
           "type": "string"
@@ -248,6 +928,24 @@
           "minimum": 0,
           "title": "Cooldown",
           "type": "integer"
+        },
+        "category": {
+          "default": "General",
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Category",
+          "type": "string"
+        },
+        "checks": {
+          "$ref": "#/$defs/CommandChecks"
+        },
+        "options": {
+          "items": {
+            "$ref": "#/$defs/CommandOption"
+          },
+          "maxItems": 25,
+          "title": "Options",
+          "type": "array"
         }
       },
       "required": [
@@ -255,6 +953,140 @@
         "name"
       ],
       "title": "Trigger",
+      "type": "object"
+    },
+    "VisualAttachment": {
+      "additionalProperties": false,
+      "properties": {
+        "filename": {
+          "default": "report.txt",
+          "pattern": "^[a-zA-Z0-9_.-]{1,100}$",
+          "title": "Filename",
+          "type": "string"
+        },
+        "content": {
+          "default": "Report contents",
+          "maxLength": 16000,
+          "title": "Content",
+          "type": "string"
+        }
+      },
+      "title": "VisualAttachment",
+      "type": "object"
+    },
+    "VisualButton": {
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "default": "Click me",
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "reply": {
+          "default": "Hello!",
+          "maxLength": 2000,
+          "title": "Reply",
+          "type": "string"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "format": "uri",
+              "maxLength": 2083,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Url"
+        },
+        "style": {
+          "default": "secondary",
+          "enum": [
+            "primary",
+            "secondary",
+            "success",
+            "danger"
+          ],
+          "title": "Style",
+          "type": "string"
+        }
+      },
+      "title": "VisualButton",
+      "type": "object"
+    },
+    "VisualInput": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}$",
+          "title": "Name",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 45,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "required": {
+          "default": true,
+          "title": "Required",
+          "type": "boolean"
+        },
+        "max_length": {
+          "default": 1000,
+          "maximum": 4000,
+          "minimum": 1,
+          "title": "Max Length",
+          "type": "integer"
+        },
+        "paragraph": {
+          "default": false,
+          "title": "Paragraph",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "label"
+      ],
+      "title": "VisualInput",
+      "type": "object"
+    },
+    "VisualSelect": {
+      "additionalProperties": false,
+      "properties": {
+        "placeholder": {
+          "default": "Choose an option",
+          "maxLength": 150,
+          "minLength": 1,
+          "title": "Placeholder",
+          "type": "string"
+        },
+        "options": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 25,
+          "minItems": 1,
+          "title": "Options",
+          "type": "array"
+        },
+        "reply": {
+          "default": "You chose {{input.value}}",
+          "maxLength": 2000,
+          "minLength": 1,
+          "title": "Reply",
+          "type": "string"
+        }
+      },
+      "title": "VisualSelect",
       "type": "object"
     }
   },
@@ -284,8 +1116,11 @@
       "items": {
         "discriminator": {
           "mapping": {
+            "action": "#/$defs/Action",
             "condition": "#/$defs/Condition",
             "embed": "#/$defs/Embed",
+            "form": "#/$defs/Form",
+            "message": "#/$defs/InteractiveMessage",
             "reply": "#/$defs/Reply",
             "trigger": "#/$defs/Trigger"
           },
@@ -303,6 +1138,15 @@
           },
           {
             "$ref": "#/$defs/Condition"
+          },
+          {
+            "$ref": "#/$defs/InteractiveMessage"
+          },
+          {
+            "$ref": "#/$defs/Form"
+          },
+          {
+            "$ref": "#/$defs/Action"
           }
         ]
       },
@@ -322,6 +1166,9 @@
     },
     "layout": {
       "$ref": "#/$defs/Layout"
+    },
+    "runtime": {
+      "$ref": "#/$defs/RuntimeConfig"
     }
   },
   "required": [

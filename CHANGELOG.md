@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.1.1 — unreleased
+
+- Add visual authoring for dual commands, typed arguments, autocomplete, categories,
+  checks, rich embeds, buttons, dropdowns, text attachments, forms and storage actions.
+- Add web configuration for intents, presence, mentions, help, built-in packs,
+  event hooks, auto-roles, versioned server settings and recurring announcements.
+- Run exported/hosted definitions through the managed 2.1 facade; require 2.1.1
+  for new export fields. Preserve existing version-1 graph documents.
+- Add offline component/event simulation and read-only registration-snapshot diffs.
+- Persist hosted runtime data in per-project SQLite files on a dedicated volume.
+- Keep custom executable Python plugins/callbacks outside the visual format.
+
+
 ## 2.1.0 — unreleased
 
 - Unified slash/prefix/both decorator with shared typed argument validation,

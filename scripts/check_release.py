@@ -36,7 +36,7 @@ def check(directory: Path, root: Path):
             "storage.py", "reminders.py", "definition.py", "engine.py", "flow.py",
             "cli.py", "example.py", "py.typed", "AGENTS.md", "CLAUDE.md",
             "extensions.py", "help.py", "jobs.py", "moderation.py", "operations.py",
-            "policies.py", "scaffold.py", "settings.py", "simulator.py", "sync.py", "transport.py",
+            "policies.py", "scaffold.py", "settings.py", "simulator.py", "sync.py", "transport.py", "context.py", "visual_runtime.py",
         )}
         if not required <= set(names):
             raise ValueError("Wheel is missing public modules or its type marker.")

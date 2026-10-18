@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Discord Bot Maker API",
-    "version": "2.0.0"
+    "version": "2.1.1"
   },
   "paths": {
     "/api/health": {
@@ -63,6 +63,78 @@
             "content": {
               "application/json": {
                 "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/preview-hook": {
+      "post": {
+        "summary": "Preview Hook",
+        "operationId": "preview_hook_api_preview_hook_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HookPreview"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sync-preview": {
+      "post": {
+        "summary": "Registration Preview",
+        "operationId": "registration_preview_api_sync_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncPreview"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
               }
             }
           }
@@ -731,6 +803,111 @@
   },
   "components": {
     "schemas": {
+      "Action": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "const": "action",
+            "title": "Kind",
+            "default": "action"
+          },
+          "operation": {
+            "type": "string",
+            "enum": [
+              "store_get",
+              "store_set",
+              "store_increment",
+              "setting_get",
+              "setting_set",
+              "moderation",
+              "schedule",
+              "cancel_job"
+            ],
+            "title": "Operation",
+            "default": "store_get"
+          },
+          "key": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,31}$",
+            "title": "Key",
+            "default": "visits"
+          },
+          "value": {
+            "type": "string",
+            "maxLength": 2000,
+            "title": "Value",
+            "default": "1"
+          },
+          "target": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Target",
+            "default": "{{options.member_id}}"
+          },
+          "moderation_action": {
+            "type": "string",
+            "enum": [
+              "kick",
+              "ban",
+              "timeout"
+            ],
+            "title": "Moderation Action",
+            "default": "kick"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Reason",
+            "default": "Moderator request"
+          },
+          "minutes": {
+            "type": "integer",
+            "maximum": 40320.0,
+            "minimum": 1.0,
+            "title": "Minutes",
+            "default": 10
+          },
+          "delay": {
+            "type": "integer",
+            "maximum": 31536000.0,
+            "minimum": 0.0,
+            "title": "Delay",
+            "default": 60
+          },
+          "retries": {
+            "type": "integer",
+            "maximum": 10.0,
+            "minimum": 0.0,
+            "title": "Retries",
+            "default": 3
+          },
+          "response": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Response",
+            "default": "Value: {{store.value}}"
+          },
+          "ephemeral": {
+            "type": "boolean",
+            "title": "Ephemeral",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "Action"
+      },
       "BotDefinition": {
         "properties": {
           "schema_version": {
@@ -767,13 +944,25 @@
                 },
                 {
                   "$ref": "#/components/schemas/Condition"
+                },
+                {
+                  "$ref": "#/components/schemas/InteractiveMessage"
+                },
+                {
+                  "$ref": "#/components/schemas/Form"
+                },
+                {
+                  "$ref": "#/components/schemas/Action"
                 }
               ],
               "discriminator": {
                 "propertyName": "kind",
                 "mapping": {
+                  "action": "#/components/schemas/Action",
                   "condition": "#/components/schemas/Condition",
                   "embed": "#/components/schemas/Embed",
+                  "form": "#/components/schemas/Form",
+                  "message": "#/components/schemas/InteractiveMessage",
                   "reply": "#/components/schemas/Reply",
                   "trigger": "#/components/schemas/Trigger"
                 }
@@ -795,6 +984,9 @@
           },
           "layout": {
             "$ref": "#/components/schemas/Layout"
+          },
+          "runtime": {
+            "$ref": "#/components/schemas/RuntimeConfig"
           }
         },
         "additionalProperties": false,
@@ -804,6 +996,175 @@
           "edges"
         ],
         "title": "BotDefinition"
+      },
+      "CommandChecks": {
+        "properties": {
+          "server_only": {
+            "type": "boolean",
+            "title": "Server Only",
+            "default": false
+          },
+          "channels": {
+            "items": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,19}$"
+            },
+            "type": "array",
+            "maxItems": 25,
+            "title": "Channels"
+          },
+          "roles": {
+            "items": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,19}$"
+            },
+            "type": "array",
+            "maxItems": 25,
+            "title": "Roles"
+          },
+          "age_restricted": {
+            "type": "boolean",
+            "title": "Age Restricted",
+            "default": false
+          },
+          "permission": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Permission"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "CommandChecks"
+      },
+      "CommandOption": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,31}$",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Description",
+            "default": "Command argument"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "str",
+              "int",
+              "float",
+              "bool"
+            ],
+            "title": "Type",
+            "default": "str"
+          },
+          "required": {
+            "type": "boolean",
+            "title": "Required",
+            "default": true
+          },
+          "default": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default"
+          },
+          "choices": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 25,
+            "title": "Choices"
+          },
+          "autocomplete": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 25,
+            "title": "Autocomplete"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "CommandOption"
+      },
+      "ComponentInput": {
+        "properties": {
+          "node_id": {
+            "type": "string",
+            "maxLength": 80,
+            "title": "Node Id"
+          },
+          "type": {
+            "type": "string",
+            "pattern": "^(button|select|form)$",
+            "title": "Type"
+          },
+          "index": {
+            "type": "integer",
+            "maximum": 24.0,
+            "minimum": 0.0,
+            "title": "Index",
+            "default": 0
+          },
+          "value": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Value",
+            "default": ""
+          },
+          "inputs": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "maxProperties": 5,
+            "title": "Inputs"
+          },
+          "owner_id": {
+            "type": "string",
+            "maxLength": 25,
+            "title": "Owner Id",
+            "default": "100000001"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "node_id",
+          "type"
+        ],
+        "title": "ComponentInput"
       },
       "Condition": {
         "properties": {
@@ -959,6 +1320,48 @@
             ],
             "title": "Image Url"
           },
+          "thumbnail_url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2083,
+                "minLength": 1,
+                "format": "uri"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thumbnail Url"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2083,
+                "minLength": 1,
+                "format": "uri"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "footer": {
+            "type": "string",
+            "maxLength": 2048,
+            "title": "Footer",
+            "default": ""
+          },
+          "fields": {
+            "items": {
+              "$ref": "#/components/schemas/EmbedField"
+            },
+            "type": "array",
+            "maxItems": 25,
+            "title": "Fields"
+          },
           "ephemeral": {
             "type": "boolean",
             "title": "Ephemeral",
@@ -972,6 +1375,139 @@
         ],
         "title": "Embed"
       },
+      "EmbedField": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "value": {
+            "type": "string",
+            "maxLength": 1024,
+            "minLength": 1,
+            "title": "Value"
+          },
+          "inline": {
+            "type": "boolean",
+            "title": "Inline",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "value"
+        ],
+        "title": "EmbedField"
+      },
+      "EventHook": {
+        "properties": {
+          "event": {
+            "type": "string",
+            "enum": [
+              "message",
+              "member_join",
+              "reaction_add"
+            ],
+            "title": "Event",
+            "default": "message"
+          },
+          "match": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Match",
+            "default": "hello"
+          },
+          "response": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Response",
+            "default": "Hello, {{user.display_name}}!"
+          },
+          "channel_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[1-9][0-9]{0,19}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channel Id"
+          },
+          "role_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[1-9][0-9]{0,19}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Id"
+          },
+          "exact": {
+            "type": "boolean",
+            "title": "Exact",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "EventHook"
+      },
+      "Form": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "const": "form",
+            "title": "Kind",
+            "default": "form"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 45,
+            "minLength": 1,
+            "title": "Title",
+            "default": "Feedback"
+          },
+          "inputs": {
+            "items": {
+              "$ref": "#/components/schemas/VisualInput"
+            },
+            "type": "array",
+            "maxItems": 5,
+            "minItems": 1,
+            "title": "Inputs"
+          },
+          "response": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Response",
+            "default": "Thanks for your feedback!"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "Form"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -984,6 +1520,105 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "HookPreview": {
+        "properties": {
+          "definition": {
+            "$ref": "#/components/schemas/BotDefinition"
+          },
+          "index": {
+            "type": "integer",
+            "maximum": 24.0,
+            "minimum": 0.0,
+            "title": "Index"
+          },
+          "context": {
+            "$ref": "#/components/schemas/PreviewContext"
+          },
+          "match": {
+            "type": "string",
+            "maxLength": 4000,
+            "title": "Match",
+            "default": "hello bot"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "definition",
+          "index"
+        ],
+        "title": "HookPreview"
+      },
+      "InteractiveMessage": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "const": "message",
+            "title": "Kind",
+            "default": "message"
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Content",
+            "default": "Choose an action"
+          },
+          "buttons": {
+            "items": {
+              "$ref": "#/components/schemas/VisualButton"
+            },
+            "type": "array",
+            "maxItems": 5,
+            "title": "Buttons"
+          },
+          "selects": {
+            "items": {
+              "$ref": "#/components/schemas/VisualSelect"
+            },
+            "type": "array",
+            "maxItems": 4,
+            "title": "Selects"
+          },
+          "attachments": {
+            "items": {
+              "$ref": "#/components/schemas/VisualAttachment"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "title": "Attachments"
+          },
+          "owner_only": {
+            "type": "boolean",
+            "title": "Owner Only",
+            "default": true
+          },
+          "timeout": {
+            "type": "integer",
+            "maximum": 900.0,
+            "minimum": 1.0,
+            "title": "Timeout",
+            "default": 180
+          },
+          "ephemeral": {
+            "type": "boolean",
+            "title": "Ephemeral",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "InteractiveMessage"
       },
       "Layout": {
         "properties": {
@@ -1041,6 +1676,40 @@
           },
           "context": {
             "$ref": "#/components/schemas/PreviewContext"
+          },
+          "options": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
+            },
+            "type": "object",
+            "maxProperties": 25,
+            "title": "Options"
+          },
+          "component": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ComponentInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "state": {
+            "$ref": "#/components/schemas/PreviewState"
           }
         },
         "additionalProperties": false,
@@ -1112,11 +1781,54 @@
             "type": "array",
             "maxItems": 100,
             "title": "Role Ids"
+          },
+          "permissions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 60,
+            "title": "Permissions"
+          },
+          "age_restricted": {
+            "type": "boolean",
+            "title": "Age Restricted",
+            "default": false
+          },
+          "in_server": {
+            "type": "boolean",
+            "title": "In Server",
+            "default": true
           }
         },
         "additionalProperties": false,
         "type": "object",
         "title": "PreviewContext"
+      },
+      "PreviewState": {
+        "properties": {
+          "values": {
+            "additionalProperties": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "object",
+            "maxProperties": 100,
+            "title": "Values"
+          },
+          "jobs": {
+            "additionalProperties": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "object",
+            "maxProperties": 100,
+            "title": "Jobs"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "PreviewState"
       },
       "Publish": {
         "properties": {
@@ -1182,6 +1894,99 @@
         ],
         "title": "Rollback"
       },
+      "RuntimeConfig": {
+        "properties": {
+          "presence": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Presence",
+            "default": ""
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "online",
+              "idle",
+              "dnd",
+              "invisible"
+            ],
+            "title": "Status",
+            "default": "online"
+          },
+          "message_content": {
+            "type": "boolean",
+            "title": "Message Content",
+            "default": false
+          },
+          "members": {
+            "type": "boolean",
+            "title": "Members",
+            "default": false
+          },
+          "mention_users": {
+            "type": "boolean",
+            "title": "Mention Users",
+            "default": false
+          },
+          "mention_roles": {
+            "type": "boolean",
+            "title": "Mention Roles",
+            "default": false
+          },
+          "mention_everyone": {
+            "type": "boolean",
+            "title": "Mention Everyone",
+            "default": false
+          },
+          "help": {
+            "type": "boolean",
+            "title": "Help",
+            "default": false
+          },
+          "help_page_size": {
+            "type": "integer",
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Help Page Size",
+            "default": 6
+          },
+          "packs": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "polls",
+                "reminders",
+                "moderation"
+              ]
+            },
+            "type": "array",
+            "maxItems": 3,
+            "title": "Packs"
+          },
+          "hooks": {
+            "items": {
+              "$ref": "#/components/schemas/EventHook"
+            },
+            "type": "array",
+            "maxItems": 25,
+            "title": "Hooks"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/ServerSettingsConfig"
+          },
+          "schedules": {
+            "items": {
+              "$ref": "#/components/schemas/ScheduleConfig"
+            },
+            "type": "array",
+            "maxItems": 25,
+            "title": "Schedules"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "RuntimeConfig"
+      },
       "Save": {
         "properties": {
           "definition": {
@@ -1200,6 +2005,149 @@
           "version"
         ],
         "title": "Save"
+      },
+      "ScheduleConfig": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]{0,31}$",
+            "title": "Id"
+          },
+          "channel_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,19}$",
+            "title": "Channel Id"
+          },
+          "seconds": {
+            "type": "integer",
+            "maximum": 31536000.0,
+            "minimum": 60.0,
+            "title": "Seconds",
+            "default": 3600
+          },
+          "response": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Response",
+            "default": "Scheduled announcement"
+          },
+          "retries": {
+            "type": "integer",
+            "maximum": 10.0,
+            "minimum": 0.0,
+            "title": "Retries",
+            "default": 3
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "channel_id"
+        ],
+        "title": "ScheduleConfig"
+      },
+      "ServerSettingsConfig": {
+        "properties": {
+          "version": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Version",
+            "default": 1
+          },
+          "defaults": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
+            },
+            "type": "object",
+            "maxProperties": 50,
+            "title": "Defaults"
+          },
+          "migrations": {
+            "items": {
+              "$ref": "#/components/schemas/SettingMigration"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Migrations"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ServerSettingsConfig"
+      },
+      "SettingMigration": {
+        "properties": {
+          "from_version": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "From Version"
+          },
+          "rename": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "maxProperties": 50,
+            "title": "Rename"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "from_version"
+        ],
+        "title": "SettingMigration"
+      },
+      "SyncPreview": {
+        "properties": {
+          "definition": {
+            "$ref": "#/components/schemas/BotDefinition"
+          },
+          "remote": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Remote"
+          },
+          "guild_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[1-9][0-9]{0,19}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Guild Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "definition"
+        ],
+        "title": "SyncPreview"
       },
       "Trigger": {
         "properties": {
@@ -1231,7 +2179,8 @@
             "type": "string",
             "enum": [
               "slash",
-              "prefix"
+              "prefix",
+              "both"
             ],
             "title": "Mode",
             "default": "slash"
@@ -1242,6 +2191,24 @@
             "minimum": 0.0,
             "title": "Cooldown",
             "default": 0
+          },
+          "category": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Category",
+            "default": "General"
+          },
+          "checks": {
+            "$ref": "#/components/schemas/CommandChecks"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/CommandOption"
+            },
+            "type": "array",
+            "maxItems": 25,
+            "title": "Options"
           }
         },
         "additionalProperties": false,
@@ -1291,6 +2258,139 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "VisualAttachment": {
+        "properties": {
+          "filename": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.-]{1,100}$",
+            "title": "Filename",
+            "default": "report.txt"
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 16000,
+            "title": "Content",
+            "default": "Report contents"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "VisualAttachment"
+      },
+      "VisualButton": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Label",
+            "default": "Click me"
+          },
+          "reply": {
+            "type": "string",
+            "maxLength": 2000,
+            "title": "Reply",
+            "default": "Hello!"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2083,
+                "minLength": 1,
+                "format": "uri"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "style": {
+            "type": "string",
+            "enum": [
+              "primary",
+              "secondary",
+              "success",
+              "danger"
+            ],
+            "title": "Style",
+            "default": "secondary"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "VisualButton"
+      },
+      "VisualInput": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,31}$",
+            "title": "Name"
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 45,
+            "minLength": 1,
+            "title": "Label"
+          },
+          "required": {
+            "type": "boolean",
+            "title": "Required",
+            "default": true
+          },
+          "max_length": {
+            "type": "integer",
+            "maximum": 4000.0,
+            "minimum": 1.0,
+            "title": "Max Length",
+            "default": 1000
+          },
+          "paragraph": {
+            "type": "boolean",
+            "title": "Paragraph",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "label"
+        ],
+        "title": "VisualInput"
+      },
+      "VisualSelect": {
+        "properties": {
+          "placeholder": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 1,
+            "title": "Placeholder",
+            "default": "Choose an option"
+          },
+          "options": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 25,
+            "minItems": 1,
+            "title": "Options"
+          },
+          "reply": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Reply",
+            "default": "You chose {{input.value}}"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "VisualSelect"
       }
     }
   }

@@ -7,7 +7,7 @@
     if (!(event.target instanceof Element) || !event.target.closest('.svelte-flow')) return;
     event.preventDefault();
     const kind = event.dataTransfer?.getData('application/dbm-block');
-    if (kind === 'trigger' || kind === 'reply' || kind === 'embed' || kind === 'condition') {
+    if (kind === 'trigger' || kind === 'reply' || kind === 'embed' || kind === 'condition' || kind === 'message' || kind === 'form' || kind === 'action') {
       onadd(kind, screenToFlowPosition({ x: event.clientX, y: event.clientY }));
     }
   }

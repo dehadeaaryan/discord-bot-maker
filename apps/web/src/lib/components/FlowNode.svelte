@@ -15,5 +15,5 @@
     <div class="branch-labels"><span>True</span><span>False</span></div>
     <Handle id="true" type="source" position={Position.Right} style="top: 35%; background: #b7c5a4"/>
     <Handle id="false" type="source" position={Position.Right} style="top: 75%; background: #e49b89"/>
-  {:else}<Handle id="next" type="source" position={Position.Right}/>{/if}
+  {:else if !data.terminal}<Handle id="next" type="source" position={Position.Right}/>{/if}
 </div>

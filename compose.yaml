@@ -9,6 +9,7 @@ x-backend: &backend
     DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET:-}
     ENABLE_HOSTING: ${ENABLE_HOSTING:-0}
     HOSTED_OWNER_ID: ${HOSTED_OWNER_ID:-}
+    BOT_DATA_DIR: /app/bot-data
     MAX_HOSTED_BOTS: ${MAX_HOSTED_BOTS:-3}
     ALLOW_DEV_LOGIN: "0"
   init: true
@@ -87,6 +88,8 @@ services:
   runner:
     <<: *backend
     profiles: [hosting]
+    volumes:
+      - bot-runtime-data:/app/bot-data
     command: [python, -m, apps.runner.main]
     depends_on:
       migrate:
@@ -104,3 +107,4 @@ services:
 
 volumes:
   database-data:
+  bot-runtime-data:

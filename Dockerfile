@@ -5,7 +5,7 @@ COPY requirements-server.lock ./
 RUN pip install --no-cache-dir -r requirements-server.lock
 COPY pyproject.toml setup.py README.md LICENSE ./
 COPY src ./src
-RUN pip install --no-deps . && useradd --uid 10001 --create-home app
+RUN pip install --no-deps . && useradd --uid 10001 --create-home app && mkdir -p /app/bot-data && chown app:app /app/bot-data
 COPY apps/__init__.py ./apps/__init__.py
 COPY apps/api ./apps/api
 COPY apps/runner ./apps/runner

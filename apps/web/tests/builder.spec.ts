@@ -165,6 +165,79 @@ test('browser defenses and proxy limits are enforced', async ({ page, request, b
   await expect(page.locator('.preview-output img')).toHaveCount(0);
 });
 
+test('2.1 dual command arguments, configuration and registration previews persist', async ({ page }) => {
+  await page.goto('/builder');
+  await page.getByLabel('Trigger type').selectOption('both');
+  await page.getByText('Typed command arguments', { exact: true }).click();
+  await page.getByRole('button', { name: 'Add command argument', exact: true }).click();
+  await page.getByLabel('Argument name', {exact:true}).fill('topic');
+  await page.getByLabel('Argument name', {exact:true}).blur();
+  await page.getByLabel('Autocomplete suggestions').fill('Python, Discord');
+  await page.getByLabel('Autocomplete suggestions').blur();
+  await page.getByRole('button', {name:'List',exact:true}).click();
+  await page.locator('.flow-list button').filter({hasText:'Send a reply'}).click();
+  await page.getByLabel('Reply message').fill('Topic: {{options.topic}}');
+  await page.getByLabel('Argument: topic').fill('Python');
+  await page.getByLabel('Simulation mode').selectOption('prefix');
+  await page.getByRole('button',{name:'Preview',exact:true}).click();
+  await expect(page.locator('.preview-output')).toContainText('Topic: Python');
+  await page.getByText('Bot configuration & features',{exact:true}).click();
+  await page.getByLabel('Searchable command help').check();
+  await page.getByLabel('Playing status').fill('with 2.1 features');
+  await page.getByLabel('Playing status').blur();
+  await page.getByRole('button',{name:'Add event hook',exact:true}).click();
+  await page.getByRole('button',{name:'Add server setting',exact:true}).click();
+  await expect(page.getByText('Valid flow',{exact:true})).toBeVisible();
+  await page.getByText('Command registration preview',{exact:true}).click();
+  await page.getByRole('button',{name:'Compare registration',exact:true}).click();
+  await expect(page.getByText('add: hello',{exact:true})).toBeVisible();
+  await expect(page.getByText('add: help',{exact:true})).toBeVisible();
+  await page.getByText('Simulate an event hook',{exact:true}).click();
+  await page.getByRole('button',{name:'Simulate event',exact:true}).click();
+  await expect(page.locator('.preview-output')).toContainText('Hello, Aaryan!');
+  await page.screenshot({path:'test-results/builder-v21-features.png',fullPage:true});
+  await expect.poll(()=>page.evaluate(()=>localStorage.getItem('dbm-draft'))).toContain('with 2.1 features');
+  await page.reload();
+  await page.getByText('Bot configuration & features',{exact:true}).click();
+  await expect(page.getByLabel('Playing status')).toHaveValue('with 2.1 features');
+  await expect(page.getByLabel('Searchable command help')).toBeChecked();
+});
+
+test('2.1 interactive buttons and dropdowns execute in offline preview', async ({ page }) => {
+  await page.goto('/builder');
+  await page.getByRole('button',{name:'Interactive',exact:true}).click();
+  await page.getByRole('button',{name:'Add dropdown',exact:true}).click();
+  await page.getByRole('button',{name:'Add text attachment',exact:true}).click();
+  await expect(page.getByText('Valid flow',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Preview',exact:true}).click();
+  await expect(page.locator('.preview-output')).toContainText('report.txt');
+  await page.locator('.preview-output').getByRole('button',{name:'Click me',exact:true}).click();
+  await expect(page.locator('.preview-output')).toContainText('Hello!');
+  await page.getByRole('button',{name:'Preview',exact:true}).click();
+  await page.locator('.preview-output').getByLabel('Choose an option').selectOption('Two');
+  await expect(page.locator('.preview-output')).toContainText('You chose Two');
+});
+
+test('2.1 forms validate input and server actions retain preview state', async ({ page }) => {
+  await page.goto('/builder');
+  await page.getByRole('button',{name:'Form',exact:true}).click();
+  await page.getByLabel('Form submission reply').fill('Received: {{input.feedback}}');
+  await page.getByLabel('Form submission reply').blur();
+  await expect(page.getByText('Valid flow',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Preview',exact:true}).click();
+  await page.locator('.preview-output').getByLabel('Your feedback').fill('Great bot');
+  await page.getByRole('button',{name:'Submit form',exact:true}).click();
+  await expect(page.locator('.preview-output')).toContainText('Received: Great bot');
+  await page.evaluate(()=>localStorage.removeItem('dbm-draft'));
+  await page.reload();
+  await page.getByRole('button',{name:'Action',exact:true}).click();
+  await expect(page.getByText('Valid flow',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Preview',exact:true}).click();
+  await expect(page.locator('.preview-output')).toContainText('Value: 1');
+  await page.getByRole('button',{name:'Preview',exact:true}).click();
+  await expect(page.locator('.preview-output')).toContainText('Value: 2');
+});
+
 test('public API requests are rate limited', async ({ request }) => {
   let status = 200;
   for (let attempt = 0; attempt < 121 && status !== 429; attempt++) {

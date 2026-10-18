@@ -44,3 +44,18 @@
 
 @media(max-width:580px){.brand{font-size:17px;gap:6px}.brand img{width:26px;height:26px}.site-header nav{gap:12px}}
 .guide h3{font-size:17px;letter-spacing:-.02em;margin:24px 0 12px}.guide ol{padding-left:22px;color:var(--muted);font-size:14px;line-height:1.8}.guide li{padding-left:4px;margin:10px 0}.guide li a{color:var(--accent)}.guide strong{color:var(--ink);font-weight:600}.guide [id]{scroll-margin-top:24px}
+
+.bot-settings { margin-top: 1.25rem; padding: 1.2rem; min-width: 0; }
+.bot-settings > details > summary { font-weight: 700; cursor: pointer; }
+.feature-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; margin-top: 1.2rem; }
+.feature-grid section, .feature-card { min-width: 0; display: flex; flex-direction: column; gap: .65rem; }
+.feature-wide { grid-column: 1 / -1; }
+.feature-grid h3 { margin: .3rem 0; }
+.feature-card { padding: .8rem; margin: .6rem 0; border: 1px solid var(--line); border-radius: 12px; }
+.bot-settings label, .simulated-modal label { display: flex; flex-direction: column; gap: .4rem; font-size: .8rem; }
+.bot-settings .checkbox-label { flex-direction: row; align-items: center; }
+.bot-settings pre, .preview-output pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 320px; overflow: auto; font-size: .75rem; }
+.component-preview { display: flex; flex-wrap: wrap; gap: .5rem; margin: .7rem 0; }
+.simulated-modal { display: flex; flex-direction: column; gap: .8rem; border: 1px solid var(--line); padding: 1rem; border-radius: 12px; }
+.registration-change { margin-top: .8rem; }
+@media (max-width: 720px) { .feature-grid { grid-template-columns: minmax(0, 1fr); } }

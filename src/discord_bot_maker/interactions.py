@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, Callable
 import discord
 
 from .definition import VARIABLES, VARIABLE_PATTERN
-from .flow import context_from
+from .context import context_from
 from .responses import Modal, Embed, Message, Poll, Response, UserError
 from .storage import Store
 

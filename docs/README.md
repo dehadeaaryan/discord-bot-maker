@@ -17,3 +17,5 @@ is the Python package.
 
 
 See the [2.1 unified authoring guide](v2.1.md) for optional hybrid commands, help, hooks, interactions, settings, jobs, simulation and operations.
+
+[Visual 2.1 guide](web-v2.1.md): advanced blocks, configuration, simulation and export/runtime boundaries.

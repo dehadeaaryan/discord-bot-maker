@@ -1,3 +1,10 @@
+# Visual 2.1 update
+
+The visual builder now supports declarative 2.1 features with shared export/runner
+execution. See web-v2.1.md. The new portable fields require the prepared 2.1.1
+Python runtime; old definitions remain accepted. No live bot sync or deployment
+is performed by this work. Hosted persistence needs the bot-runtime-data volume.
+
 # 2.1 implementation update
 
 The standalone package is being prepared as 2.1.0 (unreleased). Its optional

@@ -2,6 +2,8 @@
 
 import asyncio
 import json
+import os
+from pathlib import Path
 import sys
 import time
 
@@ -22,7 +24,7 @@ async def main():
             with sessions.begin() as session:
                 session.execute(update(Project).where(Project.id == data["project_id"], Project.lease_owner == data["lease_owner"], Project.lease_until > time.time()).values(observed_state="online", synced_revision=data["revision_id"]))
 
-    bot = HostedBot(BotDefinition.model_validate(data["definition"]), sync_commands=data["sync"], guild_id=int(data["guild_id"]) if data["guild_id"] else None)
+    bot = HostedBot(BotDefinition.model_validate(data["definition"]), sync_commands=data["sync"], guild_id=int(data["guild_id"]) if data["guild_id"] else None, storage=Path(os.environ.get("BOT_DATA_DIR", "data/hosted")) / f"{data['project_id']}.sqlite3")
 
     async def watch_lease():
         while True:
@@ -38,6 +40,7 @@ async def main():
                 return
             await asyncio.sleep(2)
 
+    bot.dbm._manage_signals = True
     watcher = asyncio.create_task(watch_lease())
     try:
         await bot.start(data.pop("token"))
