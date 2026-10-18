@@ -47,3 +47,6 @@ bot.run(sync=True)
 .venv/bin/python -m pytest -q
 .venv/bin/python examples/bot.py --preview hello
 .venv/bin/python examples/sponge.py --help
+
+2.1 optional unified-authoring reference: https://github.com/dehadeaaryan/discord-bot-maker/blob/main/docs/v2.1.md
+Includes mode="both" commands, Checks, BotConfig, help, hooks, richer responses, packs, settings, jobs, Simulator, moderation and operations.

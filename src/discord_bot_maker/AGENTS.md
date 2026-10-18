@@ -146,3 +146,15 @@ they do not automatically load `.env`.
 Legacy `DBot`, `createCommand()`, and `bRun()` remain available for old projects.
 Prefer `Bot.from_env()`, `reply()`, and `@bot.command()` for new bots. The Python
 library works independently of the repository's website, API and hosted runner.
+
+
+## 2.1 optional extensions
+
+Read docs/v2.1.md in the repository (or the corresponding GitHub documentation)
+for the complete 2.1 API. `@bot.command(mode="both")` supports shared slash/prefix
+handlers; prefix mode requires `Bot.from_env(slash_only=False, prefix="!")`.
+Checks, BotConfig, bot.help(), bot.on(), bot.trigger(), bot.auto_role(), bot.use(),
+Settings, bot.job(), Simulator and sync previews are opt-in. Modal commands use
+`defer=False`. Never use live bot storage in Simulator; callbacks execute real
+application code. New durable jobs require one process per SQLite file and
+idempotent handlers. PostgreSQL and restart-persistent views are not supported.

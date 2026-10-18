@@ -7,6 +7,7 @@ recursive-include src/discord_bot_maker *.py py.typed AGENTS.md CLAUDE.md
 recursive-include docs *.md
 recursive-include examples *.py *.json
 include tests/test_authoring.py tests/test_compatibility.py tests/test_engine.py tests/test_example.py
+include tests/test_unified.py tests/test_optional_features.py
 prune apps
 prune assets
 prune build

@@ -1,6 +1,7 @@
 """Response handling kept behind the package's small public API."""
 
 import asyncio
+import io
 import inspect
 import logging
 from dataclasses import dataclass, field
@@ -10,7 +11,7 @@ import discord
 
 from .definition import VARIABLES, VARIABLE_PATTERN
 from .flow import context_from
-from .responses import Embed, Message, Poll, Response, UserError
+from .responses import Modal, Embed, Message, Poll, Response, UserError
 from .storage import Store
 
 if TYPE_CHECKING:
@@ -102,7 +103,7 @@ async def command_error(context: CommandContext, text: str):
     Discord fixes the first deferred followup's visibility. Complete that
     public acknowledgement with a generic notice before sending private details.
     """
-    if not context.private and not context._responded:
+    if not getattr(context.interaction, "is_prefix", False) and context.interaction.response.is_done() and not context.private and not context._responded:
         await context.respond("I couldn’t complete that command. Check the private message below.")
     await private_reply(context.interaction, text)
 
@@ -115,6 +116,16 @@ def make_embed(context: CommandContext, embed: Embed) -> discord.Embed:
     )
     if embed.image_url:
         result.set_image(url=embed.image_url)
+    if embed.thumbnail_url:
+        result.set_thumbnail(url=embed.thumbnail_url)
+    if embed.url:
+        result.url = embed.url
+    if embed.footer:
+        result.set_footer(text=context.render(embed.footer, 2048))
+    for name, value, inline in embed.fields:
+        result.add_field(name=context.render(name, 256), value=context.render(value, 1024), inline=inline)
+    if len(result) > 6000:
+        raise UserError("Rendered embed text exceeds 6000 characters.")
     return result
 
 
@@ -134,8 +145,9 @@ class _ExpiringView(discord.ui.View):
                 logger.info("Could not disable an expired view's buttons.")
 
     async def on_error(self, interaction, error, item):
-        logger.error("A button action failed (%s).", type(error).__name__)
-        await private_reply(interaction, "That action could not be completed. Please try again.")
+        context = CommandContext(self.context.bot, interaction, private=True)
+        context._policy = self.context._policy
+        await self.context.bot._handle_error(context, error)
 
 
 class ButtonsView(_ExpiringView):
@@ -146,10 +158,18 @@ class ButtonsView(_ExpiringView):
         for definition in message.buttons:
             button = discord.ui.Button(label=definition.label, url=definition.url, style=discord.ButtonStyle.link if definition.url else getattr(discord.ButtonStyle, definition.style))
             if not definition.url:
-                button.callback = self._callback(definition.reply)
+                button.callback = self._callback(definition.reply, defer=definition.defer)
             self.add_item(button)
+        for definition in message.selects:
+            select = discord.ui.Select(placeholder=definition.placeholder, options=[discord.SelectOption(label=value) for value in definition.options])
+            async def selected(interaction, definition=definition, select=select):
+                async def action(ctx):
+                    return await invoke(definition.callback, ctx, select.values[0])
+                await self._callback(action)(interaction)
+            select.callback = selected
+            self.add_item(select)
 
-    def _callback(self, action):
+    def _callback(self, action, *, defer=True):
         async def callback(interaction):
             if self.is_finished():
                 await private_reply(interaction, "This button has expired. Run the command again.")
@@ -161,17 +181,16 @@ class ButtonsView(_ExpiringView):
                 return
             context = CommandContext(self.context.bot, interaction, private=True)
             context._policy = self.policy
-            await interaction.response.defer(ephemeral=True, thinking=True)
+            if defer:
+                await interaction.response.defer(ephemeral=True, thinking=True)
             try:
                 result = await invoke(action, context) if callable(action) else action
                 if result is not None:
                     await context.respond(result)
                 elif not context._responded:
                     await context.respond("Done.")
-            except UserError as error:
-                await private_reply(interaction, str(error))
             except Exception as error:
-                await self.on_error(interaction, error, None)
+                await self.context.bot._handle_error(context, error)
         return callback
 
 
@@ -211,11 +230,52 @@ class PollView(_ExpiringView):
         return callback
 
 
+class ModalView(discord.ui.Modal):
+    def __init__(self, context, definition):
+        super().__init__(title=definition.title, timeout=definition.timeout)
+        self.context, self.definition = context, definition
+        for item in definition.inputs:
+            self.add_item(discord.ui.TextInput(label=item.label, custom_id=item.name, required=item.required, max_length=item.max_length, style=discord.TextStyle.paragraph if item.paragraph else discord.TextStyle.short))
+
+    async def on_submit(self, interaction):
+        if interaction.user.id != self.context.user.id:
+            await private_reply(interaction, "This form belongs to the person who opened it.")
+            return
+        if not await self.context.bot._authorize(interaction, **self.context._policy):
+            return
+        context = CommandContext(self.context.bot, interaction, private=True)
+        context._policy = self.context._policy
+        await interaction.response.defer(ephemeral=True, thinking=True)
+        try:
+            values = {item.custom_id: item.value for item in self.children}
+            result = await invoke(self.definition.callback, context, values)
+            if result is not None:
+                await context.respond(result)
+            elif not context._responded:
+                await context.respond("Done.")
+        except Exception as error:
+            await self.context.bot._handle_error(context, error)
+
+    async def on_error(self, interaction, error):
+        await self.context.bot._handle_error(CommandContext(self.context.bot, interaction, private=True), error)
+
+
 async def send_response(context: CommandContext, response: Response):
+    from .help import Help, HelpView
     view = None
     policy = getattr(context, "_policy", {})
-    kwargs: dict[str, Any] = {"allowed_mentions": discord.AllowedMentions.none()}
-    if isinstance(response, str):
+    kwargs: dict[str, Any] = {"allowed_mentions": context.bot.config.allowed_mentions}
+    if isinstance(response, Modal):
+        if getattr(context.interaction, "is_prefix", False):
+            raise UserError("Forms require a slash command or button interaction.")
+        if context.interaction.response.is_done():
+            raise UserError("Forms require @bot.command(defer=False) and an immediate response.")
+        await context.interaction.response.send_modal(ModalView(context, response))
+        return
+    if isinstance(response, Help):
+        view = HelpView(context, response)
+        kwargs["embed"] = view.embed(context.interaction)
+    elif isinstance(response, str):
         kwargs["content"] = context.render(response)
     elif isinstance(response, Embed):
         kwargs["embed"] = make_embed(context, response)
@@ -224,7 +284,9 @@ async def send_response(context: CommandContext, response: Response):
             kwargs["content"] = context.render(response.content)
         if response.embed:
             kwargs["embed"] = make_embed(context, response.embed)
-        if response.buttons:
+        if response.attachments:
+            kwargs["files"] = [discord.File(io.BytesIO(item.data), filename=item.filename) for item in response.attachments]
+        if response.buttons or response.selects:
             view = ButtonsView(context, response, policy)
     elif isinstance(response, Poll):
         poll = Poll(context.render(response.question, 256), [context.render(choice, 60) for choice in response.choices], response.timeout)

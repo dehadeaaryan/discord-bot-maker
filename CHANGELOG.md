@@ -1,5 +1,26 @@
 # Changelog
 
+## 2.1.0 — unreleased
+
+- Unified slash/prefix/both decorator with shared typed argument validation,
+  permissions, declarative checks, cooldowns and configurable error handling.
+- Opt-in searchable help with categories, pagination and dropdown navigation.
+- Public gateway/presence/mentions configuration, reusable event hooks, message
+  triggers and checked auto-role assignment.
+- Embed fields/footer/thumbnail/link, byte attachments, dropdown callbacks,
+  autocomplete and user-owned modal forms.
+- Confirmed kick/ban/timeout helpers with refreshed permission/hierarchy checks
+  and persistent audit records.
+- Explicit command packs and installed entry-point discovery.
+- Versioned server settings with transactional migrations; durable named SQLite
+  jobs with retries, recovery, cancellation and status inspection.
+- Offline command/event/component simulator, structured logging, readiness
+  endpoint, SIGTERM shutdown and standalone Docker/Coolify scaffolding.
+- Read-only command-sync previews with scope and before/after payload diffs.
+- See docs/v2.1.md for usage, compatibility and deliberate limitations. PostgreSQL,
+  restart-persistent views and distributed execution remain deferred.
+
+
 ## 2.0.0 — 2026-10-17
 
 - Minimal visual editor with palette drag/drop, multiple commands, branch previews,

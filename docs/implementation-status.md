@@ -1,3 +1,11 @@
+# 2.1 implementation update
+
+The standalone package is being prepared as 2.1.0 (unreleased). Its optional
+unified-authoring APIs are documented in v2.1.md. No release upload or live bot
+synchronization is part of this work. PostgreSQL, restart-persistent views and
+distributed scheduling remain deferred. Container templates require deployment
+verification; Python tests exercise offline adapters and fixtures.
+
 # Implementation status
 
 Web development resumed after the user published the Python prerelease on PyPI.

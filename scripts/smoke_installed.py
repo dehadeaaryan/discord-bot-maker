@@ -7,7 +7,7 @@ import json
 import tempfile
 from pathlib import Path
 
-from discord_bot_maker import Bot, Embed, Engine, Context, __version__
+from discord_bot_maker import Bot, Embed, Engine, Context, Simulator, Checks, Settings, __version__
 
 
 async def main():
@@ -23,7 +23,20 @@ async def main():
         bot.store.set("setting", {"ready": True})
         bot.store.close()
         assert bot.store.get("setting") == {"ready": True}
+        async with Simulator(bot) as sim:
+            assert (await sim.command("add", options={"first": 2})).content == "3"
+        assert bot.settings(10, Settings(1, {"enabled": True})).get()["enabled"]
+        assert bot.validate_config()["valid"]
+        assert bot.sync_preview([])["changes"][0]["action"] == "add"
         await bot.client.close()
+        dual = Bot("offline-token", prefix="!", help_command=False, storage=":memory:")
+        @dual.command(mode="both", checks=Checks(server_only=True))
+        def greet(name: str):
+            return f"Hello {name}"
+        dual.help(mode="both")
+        async with Simulator(dual) as sim:
+            assert (await sim.command("greet", mode="prefix", arguments='"Sam Smith"')).content == "Hello Sam Smith"
+        await dual.client.close()
         static = Bot("offline-token", slash_only=True)
         static.reply("hello", "Hello, {{user.display_name}}!")
         result = Engine(static.to_definition()).execute("hello", Context(display_name="Sam"))

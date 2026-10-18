@@ -23,3 +23,20 @@ from .responses import Button, Embed, Message, Poll, Response, UserError
 from .storage import Store
 
 __all__ += ["Button", "CommandContext", "Embed", "Message", "Poll", "Response", "Store", "UserError"]
+
+from .config import BotConfig
+from .policies import Checks
+
+__all__ += ["BotConfig", "Checks"]
+
+from .responses import Attachment, Modal, Select, TextInput
+__all__ += ["Attachment", "Modal", "Select", "TextInput"]
+
+from .simulator import Simulator, SimulationResult
+__all__ += ["Simulator", "SimulationResult"]
+
+from .settings import Settings, ServerSettings
+__all__ += ["Settings", "ServerSettings"]
+
+from .operations import configure_logging
+__all__ += ["configure_logging"]

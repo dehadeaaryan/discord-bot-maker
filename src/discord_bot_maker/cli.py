@@ -33,11 +33,18 @@ def main():
     command = sub.add_parser("template")
     command.add_argument("name", choices=["greeting", "rules", "faq"], default="greeting", nargs="?")
     sub.add_parser("schema")
+    command = sub.add_parser("scaffold", help="Create standalone Docker/Coolify bot files")
+    command.add_argument("--output", type=Path, required=True)
     command = sub.add_parser("migrate")
     command.add_argument("definition", type=Path, help="JSON export of a v1 command dictionary")
     command.add_argument("--prefix", default="!")
     args = parser.parse_args()
     try:
+        if args.action == "scaffold":
+            from .scaffold import scaffold
+            for name in scaffold(args.output):
+                print(args.output / name)
+            return
         if args.action == "schema":
             print(json.dumps(BotDefinition.model_json_schema(), indent=2))
             return

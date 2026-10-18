@@ -38,3 +38,26 @@ def parse_id(value: str | int | None, label: str) -> int | None:
     if not text.isdigit() or not 0 < int(text) < 2**64:
         raise ValueError(f"{label} must be a numeric Discord ID.")
     return int(text)
+
+
+class BotConfig:
+    """Optional gateway configuration. Defaults preserve the existing Bot API.
+
+    Intents and allowed_mentions are discord.py values; callers can opt into
+    individual capabilities without replacing the managed client.
+    """
+
+    def __init__(self, *, intents=None, presence: str | None = None, status: str = "online", allowed_mentions=None):
+        import discord
+        if intents is not None and not isinstance(intents, discord.Intents):
+            raise TypeError("intents must be discord.Intents.")
+        if allowed_mentions is not None and not isinstance(allowed_mentions, discord.AllowedMentions):
+            raise TypeError("allowed_mentions must be discord.AllowedMentions.")
+        if status not in {"online", "idle", "dnd", "invisible"}:
+            raise ValueError("Status must be online, idle, dnd or invisible.")
+        if presence is not None and (not isinstance(presence, str) or not 1 <= len(presence) <= 128):
+            raise ValueError("Presence must contain 1–128 characters.")
+        self.intents = discord.Intents(intents.value) if intents is not None else None
+        self.presence = presence
+        self.status = status
+        self.allowed_mentions = allowed_mentions if allowed_mentions is not None else discord.AllowedMentions.none()

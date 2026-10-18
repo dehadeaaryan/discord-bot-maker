@@ -4,10 +4,10 @@
 
 - Existing project: https://pypi.org/project/discord-bot-maker/
 - Latest published version reported by the user: **2.0.0a1**.
-- Prepared next release: **2.0.0**, the stable v2 Python package.
+- Prepared next release: **2.1.0**, the unified-authoring Python package (unreleased).
 - Distribution: `discord-bot-maker`; import: `discord_bot_maker`.
-- Artifacts: `discord_bot_maker-2.0.0-py3-none-any.whl` and
-  `discord_bot_maker-2.0.0.tar.gz`.
+- Artifacts: `discord_bot_maker-2.1.0-py3-none-any.whl` and
+  `discord_bot_maker-2.1.0.tar.gz`.
 
 This stable release is for the standalone Python package. It can be installed
 without `--pre`. The web app and experimental hosted runner are separate repository
@@ -24,8 +24,8 @@ uv pip install -e '.[release]'
 .venv/bin/python -m pytest -q
 .venv/bin/python -m build
 .venv/bin/python scripts/check_release.py
-.venv/bin/python scripts/check_secrets.py dist/discord_bot_maker-2.0.0-py3-none-any.whl dist/discord_bot_maker-2.0.0.tar.gz
-.venv/bin/python -m twine check --strict dist/discord_bot_maker-2.0.0-py3-none-any.whl dist/discord_bot_maker-2.0.0.tar.gz
+.venv/bin/python scripts/check_secrets.py dist/discord_bot_maker-2.1.0-py3-none-any.whl dist/discord_bot_maker-2.1.0.tar.gz
+.venv/bin/python -m twine check --strict dist/discord_bot_maker-2.1.0-py3-none-any.whl dist/discord_bot_maker-2.1.0.tar.gz
 ```
 
 For a locked publishing-tool install, use `uv pip install -r requirements-release.lock`.
@@ -51,7 +51,7 @@ checks do not certify the repository's optional hosted service for production.
 ## Upload this version
 
 ```sh
-.venv/bin/python -m twine upload --repository pypi dist/discord_bot_maker-2.0.0-py3-none-any.whl dist/discord_bot_maker-2.0.0.tar.gz
+.venv/bin/python -m twine upload --repository pypi dist/discord_bot_maker-2.1.0-py3-none-any.whl dist/discord_bot_maker-2.1.0.tar.gz
 ```
 
 Twine uses supported PyPI credentials from its environment/keyring or prompts for
@@ -63,7 +63,7 @@ settings if needed. Do not put it in source, a shell command, or this repository
 Optional rehearsal against TestPyPI uses the same exact artifacts:
 
 ```sh
-.venv/bin/python -m twine upload --repository testpypi dist/discord_bot_maker-2.0.0-py3-none-any.whl dist/discord_bot_maker-2.0.0.tar.gz
+.venv/bin/python -m twine upload --repository testpypi dist/discord_bot_maker-2.1.0-py3-none-any.whl dist/discord_bot_maker-2.1.0.tar.gz
 ```
 
 TestPyPI is a separate account/project registry with separate credentials. For a
@@ -75,7 +75,7 @@ TestPyPI may not contain dependencies.
 For a consumer's active virtual environment:
 
 ```sh
-python -m pip install --upgrade 'discord-bot-maker==2.0.0'
+python -m pip install --upgrade 'discord-bot-maker==2.1.0'
 ```
 
 Or follow the newest stable release:
@@ -93,7 +93,7 @@ verify what PyPI actually serves.
 
 Change version in pyproject.toml, update CHANGELOG.md and release instructions,
 run the checks, commit, and build fresh artifacts. PyPI versions/files are
-immutable: if 2.0.0 has already been uploaded, fix forward as 2.0.1 rather than
+immutable: if 2.1.0 has already been uploaded, fix forward as 2.1.1 rather than
 trying to overwrite it. The release checker derives filenames from metadata.
 Do not use `--skip-existing` to hide an accidental version collision.
 

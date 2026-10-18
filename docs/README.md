@@ -14,3 +14,6 @@
 AI coding tools can start from ../llms.txt. Sponge's source is ../examples/sponge.py.
 The website is separate, unfinished repository work; the current release target
 is the Python package.
+
+
+See the [2.1 unified authoring guide](v2.1.md) for optional hybrid commands, help, hooks, interactions, settings, jobs, simulation and operations.

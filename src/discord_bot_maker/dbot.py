@@ -8,6 +8,7 @@ from discord.ext import commands
 
 from .command import Command
 from .features import Features, ManagedClient
+from .config import BotConfig
 
 logger = logging.getLogger(__name__)
 
@@ -32,12 +33,16 @@ class Bot(Features):
         channel_id: int | str | None = None,
         storage: str | Path = "data/bot.sqlite3",
         slash_only: bool = False,
+        config: BotConfig | None = None,
     ):
         if not token or not token.strip():
             raise ValueError("A Discord bot token is required.")
         prefixes = (prefix,) if isinstance(prefix, str) else prefix
         if not prefixes or any(not isinstance(value, str) or not value for value in prefixes):
             raise ValueError("Provide at least one nonempty command prefix.")
+        self.config = config or BotConfig()
+        if not isinstance(self.config, BotConfig):
+            raise TypeError("config must be a BotConfig value.")
         self.token = token
         self.prefix = prefix
         self.owner = owner
@@ -53,14 +58,18 @@ class Bot(Features):
         """Initialize the underlying client without making a network connection."""
         if self.client is not None:
             raise RuntimeError("The bot client is already initialized.")
-        intents = discord.Intents.default()
-        intents.message_content = not self.slash_only
+        intents = discord.Intents(self.config.intents.value) if self.config.intents is not None else discord.Intents.default()
+        if self.config.intents is None:
+            intents.message_content = not self.slash_only
+        if not self.slash_only and not intents.message_content:
+            raise ValueError("Prefix commands require the message_content intent.")
         self._gateway_intents = intents
-        self.client = ManagedClient(self, command_prefix=self.prefix, intents=intents, help_command=None)
+        self.client = ManagedClient(self, command_prefix=self.prefix, intents=intents, help_command=None, allowed_mentions=self.config.allowed_mentions, activity=discord.Game(self.config.presence) if self.config.presence else None, status=getattr(discord.Status, self.config.status))
 
         @self.client.event
         async def on_ready():
             logger.info("Connected to Discord as %s", self.client.user)
+            await self.emit("ready")
 
         @self.client.event
         async def on_message(message):
@@ -70,6 +79,7 @@ class Bot(Features):
                 return
             if self.channel_id and message.channel.id != self.channel_id:
                 return
+            await self.emit("message", message)
             prefixes = (self.prefix,) if isinstance(self.prefix, str) else self.prefix
             for prefix in prefixes:
                 if not message.content.startswith(prefix):
@@ -176,6 +186,8 @@ class Bot(Features):
 
     def run(self, *, sync: bool = False):
         """Connect to Discord. Use sync=True on first run or after command changes."""
+        self.validate_config()
+        self._manage_signals = True
         self._sync_commands = sync
         self._require_client().run(self.token)
 

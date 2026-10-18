@@ -218,3 +218,6 @@ Existing `DBot` constructors and legacy methods still work. Prefer
 `Bot.from_env()` plus the methods above for new scripts. `Bot` and `FlowBot` are
 different entry points: `Bot` is the authoring facade, while `FlowBot` executes an
 already validated graph. There is no need to subclass either for ordinary bots.
+
+
+See the [2.1 unified authoring guide](v2.1.md) for optional hybrid commands, help, hooks, interactions, settings, jobs, simulation and operations.

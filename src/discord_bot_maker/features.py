@@ -5,9 +5,10 @@ import inspect
 import logging
 import math
 import random
+import shlex
 import time
 from pathlib import Path
-from typing import Any, Callable, TypeVar, get_type_hints
+from typing import Any, Callable, TypeVar, get_type_hints, get_origin, get_args, Literal
 
 import discord
 from discord import app_commands
@@ -19,6 +20,11 @@ from .interactions import CommandContext, command_error, invoke, private_reply, 
 from .reminders import ReminderQueue
 from .responses import Embed, Message, Poll, Response, UserError
 from .storage import Store
+from .policies import Checks
+from .transport import PrefixInteraction
+from .extensions import Extensions
+from .jobs import Jobs
+from .moderation import Moderation
 
 logger = logging.getLogger(__name__)
 F = TypeVar("F", bound=Callable[..., Any])
@@ -31,6 +37,14 @@ class ManagedClient(commands.Bot):
         super().__init__(**kwargs)
 
     async def setup_hook(self):
+        if self.dbm._manage_signals:
+            import signal
+            try:
+                previous = signal.getsignal(signal.SIGTERM)
+                asyncio.get_running_loop().add_signal_handler(signal.SIGTERM, lambda: asyncio.create_task(self.close()))
+                self.dbm._previous_sigterm = previous
+            except (NotImplementedError, RuntimeError, ValueError):
+                logger.info("SIGTERM handler unavailable on this platform/thread.")
         if self.dbm._sync_commands:
             if self.dbm.guild_id:
                 guild = discord.Object(id=self.dbm.guild_id)
@@ -38,12 +52,18 @@ class ManagedClient(commands.Bot):
                 await self.tree.sync(guild=guild)
             else:
                 await self.tree.sync()
+        if self.dbm._health_endpoint:
+            from .operations import health_server
+            self.dbm._background.add(asyncio.create_task(health_server(self.dbm, *self.dbm._health_endpoint)))
+        if self.dbm.jobs.handlers:
+            self.dbm._background.add(asyncio.create_task(self.dbm.jobs.run()))
         for callback in self.dbm._schedules:
             self.dbm._background.add(asyncio.create_task(self.dbm._run_schedule(*callback)))
         if self.dbm._reminders_enabled:
             self.dbm._background.add(asyncio.create_task(self.dbm._run_reminders()))
 
     async def on_member_join(self, member):
+        await self.dbm.emit("member_join", member)
         welcome = self.dbm._welcome
         if welcome is None or (self.dbm.guild_id and member.guild.id != self.dbm.guild_id):
             return
@@ -61,7 +81,16 @@ class ManagedClient(commands.Bot):
             return
         await channel.send(text, allowed_mentions=discord.AllowedMentions.none())
 
+    async def on_reaction_add(self, reaction, user):
+        if not user.bot:
+            await self.dbm.emit("reaction_add", reaction, user)
+
     async def close(self):
+        if self.dbm._previous_sigterm is not None:
+            import signal
+            asyncio.get_running_loop().remove_signal_handler(signal.SIGTERM)
+            signal.signal(signal.SIGTERM, self.dbm._previous_sigterm)
+            self.dbm._previous_sigterm = None
         for task in self.dbm._background:
             task.cancel()
         if self.dbm._background:
@@ -71,7 +100,7 @@ class ManagedClient(commands.Bot):
         await super().close()
 
 
-class Features:
+class Features(Extensions):
     """Public helpers mixed into Bot while preserving its original prefix API."""
 
     def _init_features(self, *, guild_id=None, channel_id=None, storage="data/bot.sqlite3", slash_only=False):
@@ -89,40 +118,82 @@ class Features:
         self._static_replies: dict = {}
         self._policies: dict = {}
         self._cooldowns: dict = {}
+        self._commands = {}
+        self._clock = time.monotonic
+        self._error_handler = None
+        self._hooks = {}
+        self._packs = set()
+        self.jobs = Jobs(self)
+        self.moderation = Moderation(self)
+        self._health_endpoint = None
+        self._manage_signals = False
+        self._previous_sigterm = None
 
     @classmethod
-    def from_env(cls: type[B], path: str | Path = ".env", *, guild_id: int | str | None = None, channel_id: int | str | None = None, storage: str | Path = "data/bot.sqlite3") -> B:
+    def from_env(cls: type[B], path: str | Path = ".env", *, guild_id: int | str | None = None, channel_id: int | str | None = None, storage: str | Path = "data/bot.sqlite3", **configuration) -> B:
         """Create a slash-only bot from .env. Explicit IDs override env settings."""
         values = read_env(path)
         return cls(
             token=values["DISCORD_BOT_TOKEN"],
             guild_id=guild_id if guild_id is not None else values["DISCORD_GUILD_ID"],
             channel_id=channel_id if channel_id is not None else values["DISCORD_CHANNEL_ID"],
-            storage=storage, slash_only=True, help_command=False,
+            storage=storage, slash_only=configuration.pop("slash_only", True), help_command=configuration.pop("help_command", False), **configuration,
         )
 
-    async def _authorize(self, interaction, *, permission=None, role_id=None):
-        error = None
+    def _policy_failure(self, interaction, *, permission=None, role_id=None, checks=None):
         if self.guild_id and interaction.guild_id != self.guild_id:
-            error = "This command is only available in the configured server."
-        elif self.channel_id and interaction.channel_id != self.channel_id:
-            error = f"Try this command in <#{self.channel_id}>."
-        elif permission and not getattr(interaction.permissions, permission, False):
-            error = f"You need the {permission.replace('_', ' ')} permission to use this command."
-        elif role_id and role_id not in {role.id for role in getattr(interaction.user, "roles", [])}:
-            error = "You do not have the role required for this command."
+            return "This command is only available in the configured server."
+        if self.channel_id and interaction.channel_id != self.channel_id:
+            return f"Try this command in <#{self.channel_id}>."
+        if permission and not getattr(interaction.permissions, permission, False):
+            return f"You need the {permission.replace('_', ' ')} permission to use this command."
+        if role_id and role_id not in {role.id for role in getattr(interaction.user, "roles", [])}:
+            return "You do not have the role required for this command."
+        return checks.failure(interaction) if checks else None
+
+    async def _authorize(self, interaction, **policy):
+        error = self._policy_failure(interaction, **policy)
         if error:
             await private_reply(interaction, error)
-            return False
-        return True
+        return error is None
 
-    def command(self, name: str | None = None, *, description: str | None = None, private: bool = False, cooldown: float = 0, permission: str | None = None, role_id: int | str | None = None) -> Callable[[F], F]:
-        """Register a slash command from a normal or async Python function.
+    def on_error(self, function):
+        """Register a shared error handler: async handler(ctx, error) -> response."""
+        self._error_handler = function
+        return function
+
+    async def _handle_error(self, context, error):
+        if self._error_handler:
+            try:
+                result = await invoke(self._error_handler, context, error)
+                if result is not None:
+                    await context.respond(result)
+                return
+            except Exception as handler_error:
+                logger.error("Command error handler failed (%s).", type(handler_error).__name__)
+        if isinstance(error, UserError):
+            await command_error(context, str(error))
+        else:
+            logger.error("Command failed (%s).", type(error).__name__)
+            await command_error(context, "That command could not be completed. Please try again.")
+
+    def command(self, name: str | None = None, *, description: str | None = None, private: bool = False, cooldown: float = 0, permission: str | None = None, role_id: int | str | None = None, mode: str = "slash", category: str = "General", checks: Checks | None = None, autocomplete: dict | None = None, defer: bool = True) -> Callable[[F], F]:
+        """Register a slash, prefix or dual command from one typed function.
 
         Type annotated parameters become Discord options. A leading `ctx`
         parameter receives CommandContext and is not shown as an option. Return
         str, Embed, Message or Poll; response deferral and errors are managed.
         """
+        if mode not in {"slash", "prefix", "both"}:
+            raise ValueError("Command mode must be slash, prefix or both.")
+        if mode != "slash" and self.slash_only:
+            raise ValueError("Prefix commands require slash_only=False.")
+        if private and mode != "slash":
+            raise ValueError("Private responses are only supported by slash commands.")
+        if not isinstance(category, str) or not 1 <= len(category) <= 80:
+            raise ValueError("Category must contain 1–80 characters.")
+        if checks is not None and not isinstance(checks, Checks):
+            raise TypeError("checks must be a Checks value.")
         if not math.isfinite(cooldown) or not 0 <= cooldown <= 86400:
             raise ValueError("Cooldown must be between 0 and 86400 seconds.")
         if permission and permission not in discord.Permissions.VALID_FLAGS:
@@ -140,6 +211,8 @@ class Features:
             parameters = list(signature.parameters.values())
             inject_context = bool(parameters and parameters[0].name in {"ctx", "context"})
             if inject_context:
+                if parameters[0].kind is not inspect.Parameter.POSITIONAL_OR_KEYWORD:
+                    raise ValueError("The leading context must be a normal positional parameter.")
                 parameters = parameters[1:]
             try:
                 hints = get_type_hints(function)
@@ -152,46 +225,116 @@ class Features:
                 annotation = hints.get(parameter.name, parameter.annotation)
                 if annotation is inspect.Parameter.empty:
                     raise ValueError(f"Add a type annotation to option {parameter.name!r}, for example : str or : int.")
+                if annotation not in (str, int, float, bool) and not (get_origin(annotation) is Literal and get_args(annotation) and type(get_args(annotation)[0]) in (str, int, float) and all(type(v) is type(get_args(annotation)[0]) for v in get_args(annotation))):
+                    raise ValueError("Options support str, int, float, bool and Literal annotations.")
                 visible.append(parameter.replace(annotation=annotation))
-            policy = {"permission": permission, "role_id": role_id}
+            for parameter in visible:
+                if parameter.default is not inspect.Parameter.empty:
+                    try:
+                        self._validate_options([parameter], {parameter.name: parameter.default})
+                    except UserError as error:
+                        raise ValueError(f"Invalid default for {parameter.name}.") from error
+            policy = {"permission": permission, "role_id": role_id, "checks": checks}
 
             async def callback(interaction, **options):
                 if not await self._authorize(interaction, **policy):
                     return
-                now = time.monotonic()
-                key = (command_name, interaction.guild_id, interaction.user.id)
-                if self._cooldowns.get(key, 0) > now:
-                    await private_reply(interaction, "This command is on cooldown. Try again shortly.")
-                    return
-                if cooldown:
-                    self._cooldowns = {key: expiry for key, expiry in self._cooldowns.items() if expiry > now}
-                    if len(self._cooldowns) >= 10000:
-                        await private_reply(interaction, "The bot is busy. Try again shortly.")
-                        return
-                    self._cooldowns[key] = now + cooldown
                 context = CommandContext(self, interaction, private=private)
                 context._policy = policy
-                await interaction.response.defer(ephemeral=private, thinking=True)
                 try:
-                    arguments = signature.bind_partial(*([context] if inject_context else []), **options)
+                    options = self._validate_options(visible, options)
+                    now = self._clock()
+                    key = (command_name, interaction.guild_id, interaction.user.id)
+                    if self._cooldowns.get(key, 0) > now:
+                        await private_reply(interaction, "This command is on cooldown. Try again shortly.")
+                        return
+                    if cooldown:
+                        self._cooldowns = {key: expiry for key, expiry in self._cooldowns.items() if expiry > now}
+                        if len(self._cooldowns) >= 10000:
+                            raise UserError("The bot is busy. Try again shortly.")
+                        self._cooldowns[key] = now + cooldown
+                    if defer:
+                        await interaction.response.defer(ephemeral=private, thinking=True)
+                    arguments = signature.bind(*([context] if inject_context else []), **options)
                     arguments.apply_defaults()
                     result = await invoke(function, *arguments.args, **arguments.kwargs)
                     if result is not None:
                         await context.respond(result)
                     elif not context._responded:
                         await context.respond("Done.")
-                except UserError as error:
-                    await command_error(context, str(error))
                 except Exception as error:
-                    logger.error("Command %s failed (%s).", command_name, type(error).__name__)
-                    await command_error(context, "That command could not be completed. Please try again.")
+                    await self._handle_error(context, error)
 
             callback.__signature__ = inspect.Signature([inspect.Parameter("interaction", inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=discord.Interaction), *visible])
-            client.tree.add_command(app_commands.Command(name=command_name, description=command_description, callback=callback))
+            slash = app_commands.Command(name=command_name, description=command_description, callback=callback) if mode != "prefix" else None
+            if autocomplete:
+                if slash is None:
+                    raise ValueError("Autocomplete requires a slash command.")
+                for option, provider in autocomplete.items():
+                    async def complete(interaction, current, provider=provider):
+                        if self._policy_failure(interaction, **policy):
+                            return []
+                        try:
+                            values = await invoke(provider, CommandContext(self, interaction, private=True), current)
+                            return [app_commands.Choice(name=str(v)[:100], value=v) for v in values][:25]
+                        except Exception as error:
+                            logger.error("Autocomplete failed (%s).", type(error).__name__)
+                            return []
+                    complete.__signature__ = inspect.Signature([inspect.Parameter("interaction", inspect.Parameter.POSITIONAL_OR_KEYWORD), inspect.Parameter("current", inspect.Parameter.POSITIONAL_OR_KEYWORD)])
+                    slash.autocomplete(option)(complete)
+            if slash:
+                client.tree.add_command(slash)
+            if mode != "slash":
+                async def prefix_callback(ctx, *, arguments: str = ""):
+                    interaction = PrefixInteraction(ctx)
+                    try:
+                        values = shlex.split(arguments)
+                        if len(values) > len(visible):
+                            raise UserError("Too many arguments. Quote values containing spaces.")
+                        options = {p.name: self._convert_prefix(p.annotation, value) for p, value in zip(visible, values)}
+                    except (ValueError, UserError) as error:
+                        await self._handle_error(CommandContext(self, interaction), UserError(str(error)))
+                        return
+                    await callback(interaction, **options)
+                client.add_command(commands.Command(prefix_callback, name=command_name, help=command_description))
+            self._commands[command_name] = dict(name=command_name, description=command_description, category=category, mode=mode, policy=policy, callback=callback, parameters=visible)
             self._custom_commands.add(command_name)
             self._policies[command_name] = policy
             return function
         return register
+
+    @staticmethod
+    def _convert_prefix(annotation, value):
+        choices = get_args(annotation) if get_origin(annotation) is Literal else ()
+        kind = type(choices[0]) if choices else annotation
+        try:
+            if kind is bool:
+                if value.lower() not in {"true", "false", "yes", "no", "1", "0"}:
+                    raise ValueError()
+                return value.lower() in {"true", "yes", "1"}
+            return kind(value)
+        except (ValueError, TypeError):
+            raise UserError(f"Expected a {kind.__name__} argument.") from None
+
+    @staticmethod
+    def _validate_options(parameters, options):
+        if set(options) - {p.name for p in parameters}:
+            raise UserError("Unknown command argument.")
+        result = dict(options)
+        for parameter in parameters:
+            if parameter.name not in result:
+                if parameter.default is inspect.Parameter.empty:
+                    raise UserError(f"Missing argument: {parameter.name}.")
+                result[parameter.name] = parameter.default
+            value = result[parameter.name]
+            annotation = parameter.annotation
+            if get_origin(annotation) is Literal:
+                valid = any(type(value) is type(choice) and value == choice for choice in get_args(annotation))
+            else:
+                valid = type(value) is annotation or (annotation is float and type(value) is int)
+            if not valid or (type(value) is float and not math.isfinite(value)):
+                raise UserError(f"Invalid value for {parameter.name}.")
+        return result
 
     def reply(self: B, name: str, response: str | Embed | Message, *, description: str = "A bot command", private: bool = False, cooldown: int = 0) -> B:
         """Create a slash command with a fixed response; {{variables}} are supported."""
@@ -356,7 +499,7 @@ class Features:
                 logger.warning("Scheduled action failed (%s).", type(error).__name__)
 
     def _export_replies(self, name):
-        if self._custom_commands or self._schedules or self._welcome:
+        if self._custom_commands or self._schedules or self._welcome or self._hooks or self.jobs.handlers:
             raise ValueError("Python handlers, interactive responses and background actions cannot be exported as a JSON graph. Keep their Python source.")
         from .migration import migrate_commands
         prefix = self.prefix if isinstance(self.prefix, str) else self.prefix[0]
@@ -368,8 +511,9 @@ class Features:
             trigger_id, reply_id = f"slash-{command}", f"response-{command}"
             nodes = [dict(id=trigger_id, kind="trigger", name=command, description=description, cooldown=cooldown, mode="slash")]
             if isinstance(response, Embed):
-                from dataclasses import asdict
-                nodes.append(dict(id=reply_id, kind="embed", ephemeral=private, **asdict(response)))
+                if response.fields or response.footer or response.thumbnail_url or response.url:
+                    raise ValueError("Rich embeds cannot be exported as a JSON graph.")
+                nodes.append(dict(id=reply_id, kind="embed", ephemeral=private, title=response.title, description=response.description, color=response.color, image_url=response.image_url))
             else:
                 nodes.append(dict(id=reply_id, kind="reply", content=response, ephemeral=private))
             data["nodes"].extend(nodes)

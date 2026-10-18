@@ -150,3 +150,10 @@ Set `PREVIEW_BASE_URL` if using a port other than 5173. Commit the updated PNG.
 The build wrapper keeps Bun alive until SvelteKit finishes route-analysis workers
 and adapter output, and fails if the standalone server was not regenerated.
 Production browser tests run that generated server, rather than the Vite dev server.
+
+## 2.1 extensions
+
+See [v2.1.md](v2.1.md). Shared authoring lives in features.py; optional APIs are
+in policies.py, extensions.py, help.py, settings.py, jobs.py, moderation.py,
+operations.py, scaffold.py, sync.py and simulator.py. transport.py adapts prefix
+responses to the interaction pipeline. Tests remain offline and use isolated storage.
