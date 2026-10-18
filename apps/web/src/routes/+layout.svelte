@@ -30,7 +30,7 @@
 <div class="ambient" aria-hidden="true"></div>
 <header class="site-header">
   <a class="brand-link" href="/">
-    <img src="/ad-logo.png?v=cyan-glitch-1" width="46" height="32" alt=""/>
+    <img src="/ad-logo.png?v=orange-glass-v1" width="46" height="32" alt=""/>
     <span>Discord Bot Maker<span class="accent-dot">.</span></span>
   </a>
   <nav class="site-nav" aria-label="Main navigation">
@@ -75,12 +75,12 @@
     width: 46px;
     height: 32px;
     object-fit: contain;
-    filter: drop-shadow(0 0 8px #00eaff40);
+    filter: drop-shadow(0 0 8px #ff7a3040);
     transition: transform .2s, filter .2s;
   }
   .brand-link:hover img, .brand-link:focus-visible img {
     transform: rotate(-3deg) scale(1.05);
-    filter: drop-shadow(0 0 11px #00eaff73);
+    filter: drop-shadow(0 0 11px #ff7a3073);
   }
   .accent-dot { color: var(--accent); }
   .site-nav { display: flex; align-items: center; gap: 12px; }
